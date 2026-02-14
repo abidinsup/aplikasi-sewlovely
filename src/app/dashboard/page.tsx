@@ -194,7 +194,7 @@ export default function DashboardPage() {
                         Ajukan Jadwal Survey Ukur
                     </Button>
                     <p className="text-center text-xs text-gray-400 mt-3 shadow-sm md:hidden">
-                        Gratis konsultasi dan pengukuran untuk wilayah Jakarta
+                        Gratis konsultasi dan pengukuran
                     </p>
                 </div>
             </div>
