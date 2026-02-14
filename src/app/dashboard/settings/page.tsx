@@ -39,10 +39,25 @@ export default function SettingsPage() {
                 setPartner(dataToUse);
                 // Parse phone number (remove +62 prefix)
                 const phone = dataToUse.whatsapp_number?.replace('+62', '') || '';
+
+                // --- SMART BANK MATCHING LOGIC ---
+                const predefinedBanks = ["BCA", "Mandiri", "BRI", "BNI", "Jago Syariah", "Bank Jago", "BSI"];
+                const dbBankName = dataToUse.bank_name || "";
+
+                let bankNameValue = "Lainnya";
+                let customBankValue = "";
+
+                if (predefinedBanks.includes(dbBankName)) {
+                    bankNameValue = dbBankName;
+                } else if (dbBankName) {
+                    bankNameValue = "Lainnya";
+                    customBankValue = dbBankName;
+                }
+
                 setFormData({
                     phone: phone,
-                    bankName: dataToUse.bank_name || "BCA",
-                    customBankName: "",
+                    bankName: bankNameValue,
+                    customBankName: customBankValue,
                     bankAccountName: dataToUse.account_holder || "",
                     bankAccountNumber: dataToUse.account_number || "",
                 });
@@ -60,10 +75,25 @@ export default function SettingsPage() {
         // Reset form data to original values
         if (partner) {
             const phone = partner.whatsapp_number?.replace('+62', '') || '';
+
+            // --- SMART BANK MATCHING LOGIC ---
+            const predefinedBanks = ["BCA", "Mandiri", "BRI", "BNI", "Jago Syariah", "Bank Jago", "BSI"];
+            const dbBankName = partner.bank_name || "";
+
+            let bankNameValue = "Lainnya";
+            let customBankValue = "";
+
+            if (predefinedBanks.includes(dbBankName)) {
+                bankNameValue = dbBankName;
+            } else if (dbBankName) {
+                bankNameValue = "Lainnya";
+                customBankValue = dbBankName;
+            }
+
             setFormData({
                 phone: phone,
-                bankName: partner.bank_name || "BCA",
-                customBankName: "",
+                bankName: bankNameValue,
+                customBankName: customBankValue,
                 bankAccountName: partner.account_holder || "",
                 bankAccountNumber: partner.account_number || "",
             });
