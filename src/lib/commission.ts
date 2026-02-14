@@ -478,6 +478,42 @@ export async function updatePartnerStatus(partnerId: string, status: 'Active' | 
         return { success: false, error: err.message };
     }
 }
+
+// Get list of partners awaiting initial approval
+export async function getPendingPartners() {
+    try {
+        const { data, error } = await supabase
+            .from('partners')
+            .select('*')
+            .eq('status', 'Pending')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (err: any) {
+        console.error('Error fetching pending partners:', err);
+        return { success: false, error: err.message };
+    }
+}
+
+// Approve new partner registration via API (handles Auth confirmation)
+export async function approveNewPartner(partnerId: string) {
+    try {
+        const response = await fetch('/api/admin/approve-partner', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ partnerId }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Gagal menyetujui pendaftaran mitra');
+
+        return { success: true };
+    } catch (err: any) {
+        console.error('Error approving partner:', err);
+        return { success: false, error: err.message };
+    }
+}
 // Update partner password (Admin Only)
 export async function updatePartnerPassword(partnerId: string, newPassword: string) {
     try {

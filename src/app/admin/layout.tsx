@@ -58,19 +58,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     { count: surveyCount },
                     { count: paymentCount },
                     { count: withdrawalCount },
-                    { count: partnerReqCount }
+                    { count: partnerReqCount },
+                    { count: newPartnerCount }
                 ] = await Promise.all([
                     supabase.from('survey_schedules').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
                     supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('payment_status', 'pending'),
                     supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('type', 'withdraw').eq('status', 'pending'),
-                    supabase.from('partner_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+                    supabase.from('partner_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+                    supabase.from('partners').select('*', { count: 'exact', head: true }).eq('status', 'Pending')
                 ]);
 
                 const newCounts = {
                     surveys: surveyCount || 0,
                     payments: paymentCount || 0,
                     withdrawals: withdrawalCount || 0,
-                    partners: partnerReqCount || 0
+                    partners: (partnerReqCount || 0) + (newPartnerCount || 0)
                 };
 
                 const newTotal = Object.values(newCounts).reduce((a, b) => a + b, 0);

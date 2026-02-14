@@ -116,6 +116,7 @@ export default function RegisterPage() {
                         account_holder: accountHolder,
                         account_number: accountNumber,
                         affiliate_code: affiliateCode,
+                        status: 'Pending',
                     }
                 ]);
 

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         // Attempt direct update (assuming partnerId is Auth User ID)
         const { error } = await supabaseAdmin.auth.admin.updateUserById(
             partnerId,
-            { password: newPassword }
+            { password: newPassword, email_confirm: true }
         );
 
         if (error) {
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
                 if (user) {
                     const { error: retryError } = await supabaseAdmin.auth.admin.updateUserById(
                         user.id,
-                        { password: newPassword }
+                        { password: newPassword, email_confirm: true }
                     );
                     if (retryError) throw retryError;
                     return NextResponse.json({ success: true });
