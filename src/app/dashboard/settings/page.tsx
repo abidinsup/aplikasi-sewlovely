@@ -24,19 +24,32 @@ export default function SettingsPage() {
     });
 
     React.useEffect(() => {
-        const currentPartner = getCurrentPartner();
-        if (currentPartner) {
-            setPartner(currentPartner);
-            // Parse phone number (remove +62 prefix)
-            const phone = currentPartner.whatsapp_number?.replace('+62', '') || '';
-            setFormData({
-                phone: phone,
-                bankName: currentPartner.bank_name || "BCA",
-                customBankName: "",
-                bankAccountName: currentPartner.account_holder || "",
-                bankAccountNumber: currentPartner.account_number || "",
-            });
-        }
+        const fetchLatestData = async () => {
+            const currentPartner = getCurrentPartner();
+            if (currentPartner) {
+                // Fetch latest data from database to avoid stale localStorage
+                const { data: latestPartner, error } = await supabase
+                    .from('partners')
+                    .select('*')
+                    .eq('id', currentPartner.id)
+                    .single();
+
+                const dataToUse = (latestPartner && !error) ? latestPartner : currentPartner;
+
+                setPartner(dataToUse);
+                // Parse phone number (remove +62 prefix)
+                const phone = dataToUse.whatsapp_number?.replace('+62', '') || '';
+                setFormData({
+                    phone: phone,
+                    bankName: dataToUse.bank_name || "BCA",
+                    customBankName: "",
+                    bankAccountName: dataToUse.account_holder || "",
+                    bankAccountNumber: dataToUse.account_number || "",
+                });
+            }
+        };
+
+        fetchLatestData();
     }, []);
 
     const handleStartEdit = () => {

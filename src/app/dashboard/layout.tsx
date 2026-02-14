@@ -7,6 +7,7 @@ import { Header } from "@/components/dashboard/Header";
 import { Toaster } from "sonner";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { getCurrentPartner, Partner } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardLayout({
     children,
@@ -19,10 +20,31 @@ export default function DashboardLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
-        const currentPartner = getCurrentPartner();
-        if (currentPartner) {
-            setPartner(currentPartner);
-        }
+        const syncSession = async () => {
+            const currentPartner = getCurrentPartner();
+            if (currentPartner) {
+                setPartner(currentPartner);
+
+                // Fetch latest data from database to "heal" stale local storage
+                try {
+                    const { data: latestPartner, error } = await supabase
+                        .from('partners')
+                        .select('*')
+                        .eq('id', currentPartner.id)
+                        .single();
+
+                    if (latestPartner && !error) {
+                        // Update state and localStorage if data changed
+                        setPartner(latestPartner);
+                        localStorage.setItem('sewlovely_partner', JSON.stringify(latestPartner));
+                    }
+                } catch (err) {
+                    console.error("Session sync failed:", err);
+                }
+            }
+        };
+
+        syncSession();
     }, []);
 
     return (
