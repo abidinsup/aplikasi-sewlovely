@@ -20,11 +20,27 @@ export default function WithdrawPage() {
     const [withdrawAll, setWithdrawAll] = React.useState(false);
 
     React.useEffect(() => {
-        const currentPartner = getCurrentPartner();
-        if (currentPartner) {
-            setPartner(currentPartner);
-            fetchBalance(currentPartner.id);
-        }
+        const fetchAllData = async () => {
+            const currentPartner = getCurrentPartner();
+            if (currentPartner) {
+                // Fetch latest profile to ensure bank info is fresh
+                const { data: profile } = await supabase
+                    .from('partners')
+                    .select('*')
+                    .eq('id', currentPartner.id)
+                    .single();
+
+                if (profile) {
+                    setPartner(profile);
+                    fetchBalance(currentPartner.id);
+                } else {
+                    setPartner(currentPartner);
+                    fetchBalance(currentPartner.id);
+                }
+            }
+        };
+
+        fetchAllData();
     }, []);
 
     const fetchBalance = async (partnerId: string) => {

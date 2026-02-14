@@ -6,13 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { getCurrentPartner, Partner } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
     const [partner, setPartner] = React.useState<Partner | null>(null);
 
     React.useEffect(() => {
-        const currentPartner = getCurrentPartner();
-        setPartner(currentPartner);
+        const fetchLatestData = async () => {
+            const currentPartner = getCurrentPartner();
+            if (currentPartner) {
+                // Fetch latest data from database to avoid stale localStorage
+                const { data, error } = await supabase
+                    .from('partners')
+                    .select('*')
+                    .eq('id', currentPartner.id)
+                    .single();
+
+                if (data && !error) {
+                    setPartner(data);
+                } else {
+                    setPartner(currentPartner);
+                }
+            }
+        };
+
+        fetchLatestData();
     }, []);
 
     // Get initials from name

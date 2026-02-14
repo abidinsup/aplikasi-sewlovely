@@ -31,18 +31,34 @@ export default function CommissionPage() {
     const [selectedProof, setSelectedProof] = React.useState<{ url: string | null; loading: boolean }>({ url: null, loading: false });
 
     React.useEffect(() => {
-        const currentPartner = getCurrentPartner();
-        if (currentPartner) {
-            setPartner(currentPartner);
-            fetchTransactions(currentPartner.id);
+        const fetchAllData = async () => {
+            const currentPartner = getCurrentPartner();
+            if (currentPartner) {
+                // Fetch latest profile to ensure bank/name info is fresh
+                const { data: profile } = await supabase
+                    .from('partners')
+                    .select('*')
+                    .eq('id', currentPartner.id)
+                    .single();
 
-            // 30-second auto refresh
-            const intervalId = setInterval(() => {
+                if (profile) {
+                    setPartner(profile);
+                } else {
+                    setPartner(currentPartner);
+                }
+
                 fetchTransactions(currentPartner.id);
-            }, 30000);
 
-            return () => clearInterval(intervalId);
-        }
+                // 30-second auto refresh
+                const intervalId = setInterval(() => {
+                    fetchTransactions(currentPartner.id);
+                }, 30000);
+
+                return () => clearInterval(intervalId);
+            }
+        };
+
+        fetchAllData();
     }, []);
 
     const fetchTransactions = async (partnerId: string) => {
