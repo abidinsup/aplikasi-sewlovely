@@ -231,6 +231,7 @@ export default function SettingsPage() {
                                         <option value="Mandiri">Mandiri</option>
                                         <option value="BRI">BRI</option>
                                         <option value="BNI">BNI</option>
+                                        <option value="Jago Syariah">Jago Syariah</option>
                                         <option value="Bank Jago">Bank Jago</option>
                                         <option value="BSI">BSI</option>
                                         <option value="Lainnya">Bank Lain (Ketik Manual)</option>
