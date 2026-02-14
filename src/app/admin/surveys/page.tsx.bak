@@ -1,0 +1,348 @@
+"use client";
+
+import * as React from "react";
+import { Calendar, Clock, CheckCircle, XCircle, User, MapPin, Phone, Building2, Upload, Camera, Image as ImageIcon, X, Calculator } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import SurveyCalculator from "./SurveyCalculator";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+
+interface SurveySchedule {
+    id: string;
+    partner_id: string;
+    customer_name: string;
+    customer_phone: string;
+    customer_address: string;
+    survey_date: string;
+    survey_time: string;
+    calculator_type: string;
+    status: string;
+    created_at: string;
+    kode_gorden_url?: string;
+    motif_gorden_url?: string;
+    partners?: {
+        full_name: string;
+        affiliate_code: string;
+    };
+}
+
+export default function SurveysPage() {
+    const [surveys, setSurveys] = React.useState<SurveySchedule[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [filter, setFilter] = React.useState<"all" | "pending" | "confirmed" | "completed" | "installation" | "done">("all");
+    const [uploadingId, setUploadingId] = React.useState<string | null>(null);
+
+    const fetchSurveys = async () => {
+        setIsLoading(true);
+        try {
+            let query = supabase
+                .from('survey_schedules')
+                .select(`
+                    *,
+                    partners (
+                        full_name,
+                        affiliate_code
+                    )
+                `)
+                .order('survey_date', { ascending: true })
+                .order('survey_time', { ascending: true });
+
+            if (filter !== "all") {
+                query = query.eq('status', filter);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+            setSurveys(data || []);
+        } catch (err) {
+            console.error('Error fetching surveys:', err);
+            toast.error('Gagal memuat data survey');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchSurveys();
+    }, [filter]);
+
+    const updateStatus = async (id: string, newStatus: string) => {
+        try {
+            const { error } = await supabase
+                .from('survey_schedules')
+                .update({ status: newStatus, updated_at: new Date().toISOString() })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            const statusLabels: { [key: string]: string } = {
+                confirmed: "Proses Survey Visit",
+                completed: "Selesai",
+                cancelled: "Dibatalkan"
+            };
+            toast.success(`Status diubah menjadi ${statusLabels[newStatus] || newStatus}`);
+            fetchSurveys();
+        } catch (err) {
+            console.error('Error updating status:', err);
+            toast.error('Gagal mengubah status');
+        }
+    };
+
+    const handlePhotoUpload = async (surveyId: string, type: 'kode_gorden' | 'motif_gorden', file: File) => {
+        if (!file) return;
+
+        setUploadingId(surveyId);
+        try {
+            // Generate unique filename
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${surveyId}_${type}_${Date.now()}.${fileExt}`;
+
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('survey-photos')
+                .upload(fileName, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('survey-photos')
+                .getPublicUrl(fileName);
+
+            // Update survey record with URL
+            const updateField = type === 'kode_gorden' ? 'kode_gorden_url' : 'motif_gorden_url';
+            const { error: updateError } = await supabase
+                .from('survey_schedules')
+                .update({ [updateField]: urlData.publicUrl, updated_at: new Date().toISOString() })
+                .eq('id', surveyId);
+
+            if (updateError) throw updateError;
+
+            toast.success(`Foto ${type === 'kode_gorden' ? 'Kode Gorden' : 'Motif Gorden'} berhasil diupload!`);
+            fetchSurveys();
+        } catch (err) {
+            console.error('Error uploading photo:', err);
+            toast.error('Gagal mengupload foto. Pastikan storage bucket sudah dibuat.');
+        } finally {
+            setUploadingId(null);
+        }
+    };
+
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    };
+
+    const getStatusBadge = (status: string) => {
+        const statusConfig: { [key: string]: { bg: string; text: string; label: string } } = {
+            pending: { bg: "bg-amber-100", text: "text-amber-700", label: "Penjadwalan" },
+            confirmed: { bg: "bg-blue-100", text: "text-blue-700", label: "Proses Survey Visit" },
+            completed: { bg: "bg-purple-100", text: "text-purple-700", label: "Hasil Visit" },
+            installation: { bg: "bg-orange-100", text: "text-orange-700", label: "Proses Pemasangan" },
+            done: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Selesai" },
+            cancelled: { bg: "bg-red-100", text: "text-red-700", label: "Dibatalkan" },
+        };
+        const config = statusConfig[status] || statusConfig.pending;
+        return (
+            <span className={cn("px-3 py-1 rounded-full text-xs font-bold", config.bg, config.text)}>
+                {config.label}
+            </span>
+        );
+    };
+
+    const getCalculatorLabel = (type: string) => {
+        const labels: { [key: string]: string } = {
+            gorden: "Gorden Rumah",
+            kantor: "Gorden Kantor",
+            rs: "Gorden RS",
+        };
+        return labels[type] || type;
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Jadwal Survey</h1>
+                    <p className="text-slate-500 text-sm">Kelola jadwal survey dari pengajuan mitra</p>
+                </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+                {[
+                    { value: "all", label: "Semua" },
+                    { value: "pending", label: "Penjadwalan" },
+                    { value: "confirmed", label: "Proses Survey" },
+                    { value: "completed", label: "Hasil Visit" },
+                    { value: "installation", label: "Proses Pemasangan" },
+                    { value: "done", label: "Selesai" },
+                ].map((tab) => (
+                    <button
+                        key={tab.value}
+                        onClick={() => setFilter(tab.value as typeof filter)}
+                        className={cn(
+                            "px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap",
+                            filter === tab.value
+                                ? "bg-slate-900 text-white"
+                                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                        )}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Content */}
+            {isLoading ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+                    <div className="animate-spin h-8 w-8 border-4 border-slate-200 border-t-slate-600 rounded-full mx-auto"></div>
+                    <p className="text-slate-500 mt-4">Memuat data...</p>
+                </div>
+            ) : surveys.length === 0 ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+                    <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-slate-700 mb-2">
+                        {filter === "all" && "Belum Ada Jadwal Survey"}
+                        {filter === "pending" && "Belum Ada Penjadwalan"}
+                        {filter === "confirmed" && "Belum Ada Proses Survey"}
+                        {filter === "completed" && "Belum Ada Hasil Visit"}
+                        {filter === "installation" && "Belum Ada Proses Pemasangan"}
+                        {filter === "done" && "Belum Ada yang Selesai"}
+                    </h3>
+                    <p className="text-slate-500 text-sm">
+                        {filter === "all" && "Jadwal survey dari mitra akan muncul di sini"}
+                        {filter === "pending" && "Belum ada pengajuan survey baru dari mitra"}
+                        {filter === "confirmed" && "Belum ada survey yang sedang diproses"}
+                        {filter === "completed" && "Belum ada hasil visit survey"}
+                        {filter === "installation" && "Belum ada pemasangan yang sedang berjalan"}
+                        {filter === "done" && "Belum ada survey yang selesai sampai pemasangan"}
+                    </p>
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    {surveys.map((survey) => (
+                        <div key={survey.id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                {/* Left: Survey Info */}
+                                <div className="space-y-3 flex-1">
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        {getStatusBadge(survey.status)}
+                                        <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">
+                                            {getCalculatorLabel(survey.calculator_type)}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-slate-900">
+                                        <Calendar className="h-4 w-4 text-blue-500" />
+                                        <span className="font-bold">{formatDate(survey.survey_date)}</span>
+                                        <Clock className="h-4 w-4 text-blue-500 ml-2" />
+                                        <span className="font-bold">{survey.survey_time} WIB</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <User className="h-4 w-4 text-slate-400" />
+                                            <span>{survey.customer_name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <Phone className="h-4 w-4 text-slate-400" />
+                                            <span>{survey.customer_phone}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-slate-600 md:col-span-2">
+                                            <MapPin className="h-4 w-4 text-slate-400" />
+                                            <span>{survey.customer_address}</span>
+                                        </div>
+                                    </div>
+
+                                    {survey.partners && (
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                                            <Building2 className="h-3 w-3" />
+                                            <span>Mitra: <strong>{survey.partners.full_name}</strong> ({survey.partners.affiliate_code})</span>
+                                        </div>
+                                    )}
+
+
+
+
+                                    {/* Calculator for Completed Survey */}
+                                    {survey.status === "completed" && (
+                                        <div className="mt-6 pt-6 border-t border-slate-200">
+                                            <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                                <Calculator className="h-5 w-5 text-emerald-600" />
+                                                Hitung Estimasi & Buat Invoice
+                                            </h4>
+                                            <SurveyCalculator survey={survey} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Right: Actions */}
+                                <div className="flex flex-row lg:flex-col gap-2">
+                                    {survey.status === "pending" && (
+                                        <>
+                                            <Button
+                                                onClick={() => updateStatus(survey.id, "confirmed")}
+                                                size="sm"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white gap-1"
+                                            >
+                                                <Camera className="h-4 w-4" />
+                                                Proses Survey Visit
+                                            </Button>
+                                            <Button
+                                                onClick={() => updateStatus(survey.id, "cancelled")}
+                                                size="sm"
+                                                variant="outline"
+                                                className="text-red-600 border-red-200 hover:bg-red-50 gap-1"
+                                            >
+                                                <XCircle className="h-4 w-4" />
+                                                Tolak
+                                            </Button>
+                                        </>
+                                    )}
+                                    {survey.status === "confirmed" && (
+                                        <Button
+                                            onClick={() => updateStatus(survey.id, "completed")}
+                                            size="sm"
+                                            className="bg-purple-600 hover:bg-purple-700 text-white gap-1"
+                                        >
+                                            <CheckCircle className="h-4 w-4" />
+                                            Hasil Visit
+                                        </Button>
+                                    )}
+                                    {survey.status === "completed" && (
+                                        <Button
+                                            onClick={() => updateStatus(survey.id, "installation")}
+                                            size="sm"
+                                            className="bg-orange-600 hover:bg-orange-700 text-white gap-1"
+                                        >
+                                            <Upload className="h-4 w-4" />
+                                            Proses Pemasangan
+                                        </Button>
+                                    )}
+                                    {survey.status === "installation" && (
+                                        <Button
+                                            onClick={() => updateStatus(survey.id, "done")}
+                                            size="sm"
+                                            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                                        >
+                                            <CheckCircle className="h-4 w-4" />
+                                            Selesai
+                                        </Button>
+                                    )}
+                                    {(survey.status === "done" || survey.status === "cancelled") && (
+                                        <span className="text-xs text-slate-400 italic">Tidak ada aksi</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}

@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium Emerald Theme - Rich & Vibrant */
+    --background: 210 40% 98%;
+    /* Soft Cool Gray */
+    --foreground: 222 47% 11%;
+    /* Deep Navy */
+
+    /* Primary - Emerald 600 -> 700 Gradient Base */
+    --primary: 158 64% 52%;
+    /* Emerald 500 - Vibrant */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - White with subtle tint */
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted/Neutral */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 25% 45%;
+
+    /* Accent - Soft Emerald/Teal */
+    --accent: 158 64% 96%;
+    --accent-foreground: 166 72% 28%;
+
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* UI Borders & Inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 158 64% 52%;
+
+    --radius: 1rem;
+    /* More rounded for modern feel */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --primary: 158 64% 52%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 158 64% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-slate-50 text-foreground font-sans antialiased;
+  }
+
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+
+  /* Premium Input Field */
+  .input-field {
+    @apply flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm transition-all duration-200 placeholder:text-gray-400 focus-visible:outline-none focus-visible:border-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-500/10 hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Premium Card */
+  .card-premium {
+    @apply bg-white rounded-3xl border border-gray-100;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  }
+}
+
+@layer utilities {
+
+  /* Hide Scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Text Gradients */
+  .text-gradient-emerald {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600;
+  }
+
+  /* Glass Effects */
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl;
+  }
+
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-md border border-white/40 shadow-sm;
+  }
+
+  /* Number Input Spinners - Global Fix */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0mm;
+    size: auto;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

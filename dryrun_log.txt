@@ -1,0 +1,10 @@
+Calling Cleanup API (Dry Run)...
+Success! Result: {
+  "success": true,
+  "message": "Cleanup successful. Deleted 0 files, updated 0 surveys, cleaned 0 invoices.",
+  "stats": {
+    "deletedFiles": 0,
+    "updatedSurveys": 0,
+    "cleanedInvoices": 0
+  }
+}
