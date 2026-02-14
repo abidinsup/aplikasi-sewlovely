@@ -53,7 +53,7 @@ export default function DashboardLayout({
                 {/* Sidebar Overlay */}
                 {isSidebarOpen && (
                     <div
-                        className="fixed inset-0 bg-black/50 z-20 md:hidden print:hidden"
+                        className="fixed inset-0 bg-black/50 z-40 md:hidden print:hidden"
                         onClick={() => setIsSidebarOpen(false)}
                     />
                 )}

@@ -186,18 +186,6 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Bottom CTA (Mobile Only) */}
-            <div>
-                <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 p-4 md:hidden z-40">
-                    <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95">
-                        <Calendar className="h-5 w-5" />
-                        Ajukan Jadwal Survey Ukur
-                    </Button>
-                    <p className="text-center text-xs text-gray-400 mt-3 shadow-sm md:hidden">
-                        Gratis konsultasi dan pengukuran
-                    </p>
-                </div>
-            </div>
         </div>
     );
 }
