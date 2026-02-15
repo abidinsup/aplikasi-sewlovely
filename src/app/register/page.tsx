@@ -99,6 +99,9 @@ export default function RegisterPage() {
                 throw new Error("Gagal membuat akun login. Silakan coba lagi.");
             }
 
+            // Cleanup WhatsApp number: remove leading 0, +62, or 62
+            let cleanWhatsapp = whatsappNumber.replace(/^(\+62|62|0)/, '');
+
             // 2. Insert into partners table using the same ID
             const affiliateCode = generateAffiliateCode();
             const { error: supabaseError } = await supabase
@@ -109,14 +112,14 @@ export default function RegisterPage() {
                         full_name: fullName,
                         address: address,
                         birth_date: birthDate,
-                        whatsapp_number: `+62${whatsappNumber}`,
+                        whatsapp_number: `+62${cleanWhatsapp}`,
                         email: email.toLowerCase(),
                         password: password, // Store for legacy reasons or remove later
                         bank_name: finalBankName,
                         account_holder: accountHolder,
                         account_number: accountNumber,
                         affiliate_code: affiliateCode,
-                        status: 'Pending',
+                        status: 'Active',
                     }
                 ]);
 
@@ -136,7 +139,7 @@ export default function RegisterPage() {
                 full_name: fullName,
                 email: email.toLowerCase(),
                 affiliate_code: affiliateCode,
-                whatsapp_number: `+62${whatsappNumber}`,
+                whatsapp_number: `+62${cleanWhatsapp}`,
                 address: address,
                 birth_date: birthDate,
                 bank_name: finalBankName,
@@ -208,7 +211,15 @@ export default function RegisterPage() {
                                         className="input-field cursor-pointer"
                                         value={birthDate}
                                         onChange={(e) => setBirthDate(e.target.value)}
-                                        onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+                                        onClick={(e) => {
+                                            try {
+                                                if ('showPicker' in HTMLInputElement.prototype) {
+                                                    (e.target as any).showPicker();
+                                                }
+                                            } catch (err) {
+                                                console.warn("Date picker not supported by this browser");
+                                            }
+                                        }}
                                         required
                                     />
                                 </div>

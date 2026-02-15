@@ -31,7 +31,7 @@ export default function RegisterSuccessPage() {
                 <div className="space-y-4">
                     <h1 className="text-2xl font-bold text-gray-900">Pendaftaran Mitra Berhasil</h1>
                     <p className="text-muted-foreground text-sm leading-relaxed">
-                        Selamat bergabung sebagai mitra {appName}{partnerName ? `, ${partnerName}` : ''}!
+                        Selamat bergabung, <span className="font-bold text-gray-900">{partnerName || 'Mitra'}</span>! Akun Anda telah aktif dan siap digunakan.
                     </p>
                 </div>
 
