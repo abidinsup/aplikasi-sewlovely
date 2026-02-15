@@ -58,7 +58,29 @@ export default function SurveyPage() {
     };
 
     React.useEffect(() => {
+        const partner = getCurrentPartner();
+        if (!partner?.id) return;
+
         fetchSurveys();
+
+        // Subscribe to realtime changes for this partner
+        const channel = supabase
+            .channel(`partner-surveys-${partner.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'survey_schedules',
+                    filter: `partner_id=eq.${partner.id}`
+                },
+                () => fetchSurveys()
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const handleSearch = () => {

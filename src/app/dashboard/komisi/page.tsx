@@ -30,37 +30,6 @@ export default function CommissionPage() {
     });
     const [selectedProof, setSelectedProof] = React.useState<{ url: string | null; loading: boolean }>({ url: null, loading: false });
 
-    React.useEffect(() => {
-        const fetchAllData = async () => {
-            const currentPartner = getCurrentPartner();
-            if (currentPartner) {
-                // Fetch latest profile to ensure bank/name info is fresh
-                const { data: profile } = await supabase
-                    .from('partners')
-                    .select('*')
-                    .eq('id', currentPartner.id)
-                    .single();
-
-                if (profile) {
-                    setPartner(profile);
-                } else {
-                    setPartner(currentPartner);
-                }
-
-                fetchTransactions(currentPartner.id);
-
-                // 30-second auto refresh
-                const intervalId = setInterval(() => {
-                    fetchTransactions(currentPartner.id);
-                }, 30000);
-
-                return () => clearInterval(intervalId);
-            }
-        };
-
-        fetchAllData();
-    }, []);
-
     const fetchTransactions = async (partnerId: string) => {
         try {
             // Fetch ALL transactions for accurate balance calculation
@@ -110,6 +79,49 @@ export default function CommissionPage() {
             setIsLoading(false);
         }
     };
+
+    React.useEffect(() => {
+        const currentPartner = getCurrentPartner();
+        if (!currentPartner) return;
+
+        const setup = async () => {
+            // Fetch latest profile to ensure bank/name info is fresh
+            const { data: profile } = await supabase
+                .from('partners')
+                .select('*')
+                .eq('id', currentPartner.id)
+                .single();
+
+            if (profile) {
+                setPartner(profile);
+            } else {
+                setPartner(currentPartner);
+            }
+
+            fetchTransactions(currentPartner.id);
+        };
+
+        setup();
+
+        // Subscribe to realtime changes for transactions
+        const channel = supabase
+            .channel(`partner-commissions-${currentPartner.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'transactions',
+                    filter: `partner_id=eq.${currentPartner.id}`
+                },
+                () => fetchTransactions(currentPartner.id)
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
     const handleViewProof = async (path: string) => {
         setSelectedProof({ url: null, loading: true });

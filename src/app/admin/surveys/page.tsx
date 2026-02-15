@@ -85,6 +85,25 @@ export default function SurveysPage() {
 
     React.useEffect(() => {
         fetchSurveys();
+
+        // Subscribe to realtime changes
+        const channel = supabase
+            .channel('admin-surveys-realtime')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'survey_schedules' },
+                () => fetchSurveys()
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'invoices' },
+                () => fetchSurveys()
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [filter]);
 
     const updateStatus = async (id: string, newStatus: string) => {
