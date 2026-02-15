@@ -118,52 +118,6 @@ export default function SurveyPage() {
         return authorizedStatus && matchesSearch;
     });
 
-    // Swipe Handling
-    const [touchStart, setTouchStart] = React.useState<{ x: number; y: number } | null>(null);
-    const [touchEnd, setTouchEnd] = React.useState<{ x: number; y: number } | null>(null);
-    const minSwipeDistance = 50;
-
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart({
-            x: e.targetTouches[0].clientX,
-            y: e.targetTouches[0].clientY
-        });
-    };
-
-    const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd({
-            x: e.targetTouches[0].clientX,
-            y: e.targetTouches[0].clientY
-        });
-    };
-
-    const onTouchEnd = (e: React.TouchEvent) => {
-        if (!touchStart || !touchEnd) return;
-
-        // Use changedTouches for end point because targetTouches is empty on touchend
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-
-        const distanceX = touchStart.x - endX;
-        const distanceY = touchStart.y - endY;
-
-        const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
-        const isSignificant = Math.abs(distanceX) > minSwipeDistance;
-
-        if (isHorizontalSwipe && isSignificant) {
-            // Prevent browser back/forward if possible
-            const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
-            if (distanceX > 0 && currentIndex < tabs.length - 1) {
-                // Swipe Left -> Next Tab
-                setActiveTab(tabs[currentIndex + 1].id);
-            } else if (distanceX < 0 && currentIndex > 0) {
-                // Swipe Right -> Prev Tab
-                setActiveTab(tabs[currentIndex - 1].id);
-            }
-        }
-    };
-
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -181,13 +135,7 @@ export default function SurveyPage() {
             </div>
 
             {/* Main Unified Card */}
-            <div
-                className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden touch-pan-y"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-                style={{ touchAction: 'pan-y' }}
-            >
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Search Header inside Card */}
                 <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
                     <h3 className="font-bold text-slate-900 hidden md:block">List Pengajuan Survey</h3>
@@ -236,179 +184,174 @@ export default function SurveyPage() {
                     </div>
                 </div>
 
-                {/* Table Section with Slide Transition */}
-                <div className="overflow-hidden relative min-h-[200px]">
-                    <div
-                        key={activeTab}
-                        className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out"
-                    >
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50/50 text-slate-400 text-[10px] md:text-xs uppercase font-bold tracking-wider">
+                {/* Table Section with Horizontal Scroll & Styled Scrollbar */}
+                <div className="overflow-x-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pb-2">
+                    <div className="min-w-full inline-block align-middle">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50/50 text-slate-400 text-[10px] md:text-xs uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th className="p-4">Customer</th>
+                                    <th className="p-4">Alamat / Lokasi</th>
+                                    <th className="p-4">Tanggal Survey</th>
+                                    <th className="p-4 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 text-sm">
+                                {filteredSurveys.length === 0 ? (
                                     <tr>
-                                        <th className="p-4">Customer</th>
-                                        <th className="p-4">Alamat / Lokasi</th>
-                                        <th className="p-4">Tanggal Survey</th>
-                                        <th className="p-4 text-center">Status</th>
+                                        <td colSpan={4} className="p-12 text-center text-slate-500 italic">
+                                            Tidak ada data survey ditemukan
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50 text-sm">
-                                    {filteredSurveys.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="p-12 text-center text-slate-500 italic">
-                                                Tidak ada data survey ditemukan
+                                ) : (
+                                    filteredSurveys.map((survey) => (
+                                        <tr key={survey.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="p-4">
+                                                <div
+                                                    className="flex flex-col cursor-pointer group/name"
+                                                    onClick={() => {
+                                                        setSelectedSurvey(survey);
+                                                        setIsDetailOpen(true);
+                                                    }}
+                                                >
+                                                    <span className="font-bold text-slate-900 group-hover/name:text-emerald-600 transition-colors line-clamp-1 underline-offset-4 hover:underline">
+                                                        {survey.customer_name}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-slate-500">
+                                                <div className="flex items-center gap-1.5 max-w-[200px]">
+                                                    <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                                                    <span className="text-xs line-clamp-1">{survey.customer_address}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-1.5 text-slate-600">
+                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span className="font-medium text-xs whitespace-nowrap">
+                                                        {formatDate(survey.survey_date)}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                {getStatusBadge(survey.status)}
                                             </td>
                                         </tr>
-                                    ) : (
-                                        filteredSurveys.map((survey) => (
-                                            <tr key={survey.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="p-4">
-                                                    <div
-                                                        className="flex flex-col cursor-pointer group/name"
-                                                        onClick={() => {
-                                                            setSelectedSurvey(survey);
-                                                            setIsDetailOpen(true);
-                                                        }}
-                                                    >
-                                                        <span className="font-bold text-slate-900 group-hover/name:text-emerald-600 transition-colors line-clamp-1 underline-offset-4 hover:underline">
-                                                            {survey.customer_name}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-slate-500">
-                                                    <div className="flex items-center gap-1.5 max-w-[200px]">
-                                                        <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
-                                                        <span className="text-xs line-clamp-1">{survey.customer_address}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-1.5 text-slate-600">
-                                                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                        <span className="font-medium text-xs whitespace-nowrap">
-                                                            {formatDate(survey.survey_date)}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-center">
-                                                    {getStatusBadge(survey.status)}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                {/* DETAIL DIALOG */}
-                <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
-                        <DialogHeader>
-                            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                                <div>
-                                    <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                        Detail Pengajuan Survey
-                                        <div className="ml-2">
-                                            {selectedSurvey && getStatusBadge(selectedSurvey.status)}
-                                        </div>
-                                    </DialogTitle>
-                                    <DialogDescription className="mt-1">
-                                        ID: {selectedSurvey?.id.substring(0, 8)}...
-                                    </DialogDescription>
-                                </div>
-                            </div>
-                        </DialogHeader>
-
-                        {selectedSurvey && (
-                            <div className="space-y-6 py-4">
-                                {/* Stepper */}
-                                {selectedSurvey.status !== 'cancelled' && (
-                                    <div className="px-2 overflow-x-auto pb-2">
-                                        <SurveyStatusStepper currentStatus={selectedSurvey.status} />
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Customer Info */}
-                                    <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                        <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest">Informasi Customer</h4>
-                                        <div className="space-y-3">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                                                    <ClipboardList className="h-4 w-4 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Nama</p>
-                                                    <p className="text-sm font-bold text-slate-900">{selectedSurvey.customer_name}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                                                    <Phone className="h-4 w-4 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">No. WhatsApp</p>
-                                                    <p className="text-sm font-bold text-slate-900">{selectedSurvey.customer_phone}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-white rounded-xl border border-slate-200">
-                                                    <MapPin className="h-4 w-4 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Alamat</p>
-                                                    <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedSurvey.customer_address}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Survey Details */}
-                                    <div className="space-y-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                                        <h4 className="font-bold text-xs text-emerald-600 uppercase tracking-widest">Detail Jadwal</h4>
-                                        <div className="space-y-3">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-white rounded-xl border border-emerald-100">
-                                                    <Calendar className="h-4 w-4 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-emerald-500 font-bold uppercase">Tanggal Survey</p>
-                                                    <p className="text-sm font-bold text-slate-900">{formatDate(selectedSurvey.survey_date)}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-white rounded-xl border border-emerald-100">
-                                                    <Map className="h-4 w-4 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-emerald-500 font-bold uppercase">Tipe Survey</p>
-                                                    <p className="text-sm font-bold text-slate-900 capitalize">{selectedSurvey.calculator_type}</p>
-                                                </div>
-                                            </div>
-                                            {selectedSurvey.notes && (
-                                                <div className="pt-2">
-                                                    <p className="text-[10px] text-emerald-500 font-bold uppercase mb-1">Catatan Tambahan</p>
-                                                    <p className="text-sm text-slate-600 italic bg-white p-2 rounded-lg border border-emerald-50">
-                                                        &quot;{selectedSurvey.notes}&quot;
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex justify-end pt-4 border-t border-slate-100">
-                            <Button className="bg-emerald-600 hover:bg-emerald-700 font-bold rounded-xl px-8" onClick={() => setIsDetailOpen(false)}>
-                                Tutup
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
             </div>
+
+            {/* DETAIL DIALOG */}
+            <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
+                    <DialogHeader>
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                            <div>
+                                <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                    Detail Pengajuan Survey
+                                    <div className="ml-2">
+                                        {selectedSurvey && getStatusBadge(selectedSurvey.status)}
+                                    </div>
+                                </DialogTitle>
+                                <DialogDescription className="mt-1">
+                                    ID: {selectedSurvey?.id.substring(0, 8)}...
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    {selectedSurvey && (
+                        <div className="space-y-6 py-4">
+                            {/* Stepper */}
+                            {selectedSurvey.status !== 'cancelled' && (
+                                <div className="px-2 overflow-x-auto pb-2">
+                                    <SurveyStatusStepper currentStatus={selectedSurvey.status} />
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Customer Info */}
+                                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                    <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest">Informasi Customer</h4>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-white rounded-xl border border-slate-200">
+                                                <ClipboardList className="h-4 w-4 text-emerald-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Nama</p>
+                                                <p className="text-sm font-bold text-slate-900">{selectedSurvey.customer_name}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-white rounded-xl border border-slate-200">
+                                                <Phone className="h-4 w-4 text-emerald-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">No. WhatsApp</p>
+                                                <p className="text-sm font-bold text-slate-900">{selectedSurvey.customer_phone}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-white rounded-xl border border-slate-200">
+                                                <MapPin className="h-4 w-4 text-emerald-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Alamat</p>
+                                                <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedSurvey.customer_address}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Survey Details */}
+                                <div className="space-y-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                                    <h4 className="font-bold text-xs text-emerald-600 uppercase tracking-widest">Detail Jadwal</h4>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-white rounded-xl border border-emerald-100">
+                                                <Calendar className="h-4 w-4 text-emerald-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-emerald-500 font-bold uppercase">Tanggal Survey</p>
+                                                <p className="text-sm font-bold text-slate-900">{formatDate(selectedSurvey.survey_date)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-white rounded-xl border border-emerald-100">
+                                                <Map className="h-4 w-4 text-emerald-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-emerald-500 font-bold uppercase">Tipe Survey</p>
+                                                <p className="text-sm font-bold text-slate-900 capitalize">{selectedSurvey.calculator_type}</p>
+                                            </div>
+                                        </div>
+                                        {selectedSurvey.notes && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-emerald-500 font-bold uppercase mb-1">Catatan Tambahan</p>
+                                                <p className="text-sm text-slate-600 italic bg-white p-2 rounded-lg border border-emerald-50">
+                                                    &quot;{selectedSurvey.notes}&quot;
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end pt-4 border-t border-slate-100">
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 font-bold rounded-xl px-8" onClick={() => setIsDetailOpen(false)}>
+                            Tutup
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
