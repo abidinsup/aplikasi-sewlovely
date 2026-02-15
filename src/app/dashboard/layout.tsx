@@ -62,7 +62,7 @@ export default function DashboardLayout({
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* Main Content Area */}
-                <div className={`flex-1 flex flex-col min-h-screen md:pl-64 print:ml-0 transition-all duration-300 ease-in-out`}>
+                <div className={`flex-1 flex flex-col min-h-screen print:ml-0 transition-all duration-300 ease-in-out`}>
 
                     <Header partnerName={partner?.full_name} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
                     <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-8">
