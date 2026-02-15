@@ -56,10 +56,10 @@ export function SurveyStatusStepper({ currentStatus, className }: SurveyStatusSt
                             </div>
 
                             {/* Label */}
-                            <div className="absolute -bottom-10 w-24 text-center flex flex-col items-center">
+                            <div className="absolute -bottom-12 w-16 md:w-24 text-center flex flex-col items-center px-1">
                                 <span
                                     className={cn(
-                                        "text-[10px] font-bold uppercase tracking-wider transition-colors duration-300 leading-tight block",
+                                        "text-[8px] md:text-[10px] font-bold uppercase tracking-tight md:tracking-wider transition-colors duration-300 leading-[1.1] block break-words",
                                         isCompleted ? "text-emerald-700" : "text-slate-400",
                                         isCurrent && "text-emerald-900 scale-105"
                                     )}
@@ -72,7 +72,7 @@ export function SurveyStatusStepper({ currentStatus, className }: SurveyStatusSt
                 })}
             </div>
             {/* Spacer to prevent overlap with content below */}
-            <div className="h-10" />
+            <div className="h-12 md:h-10" />
         </div>
     );
 }
