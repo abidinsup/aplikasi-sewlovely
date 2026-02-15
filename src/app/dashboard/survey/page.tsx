@@ -119,30 +119,46 @@ export default function SurveyPage() {
     });
 
     // Swipe Handling
-    const [touchStart, setTouchStart] = React.useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
+    const [touchStart, setTouchStart] = React.useState<{ x: number; y: number } | null>(null);
+    const [touchEnd, setTouchEnd] = React.useState<{ x: number; y: number } | null>(null);
     const minSwipeDistance = 50;
 
     const onTouchStart = (e: React.TouchEvent) => {
         setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+        setTouchStart({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+        setTouchEnd({
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY
+        });
     };
 
-    const onTouchEnd = () => {
+    const onTouchEnd = (e: React.TouchEvent) => {
         if (!touchStart || !touchEnd) return;
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
 
-        if (isLeftSwipe || isRightSwipe) {
+        // Use changedTouches for end point because targetTouches is empty on touchend
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+
+        const distanceX = touchStart.x - endX;
+        const distanceY = touchStart.y - endY;
+
+        const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+        const isSignificant = Math.abs(distanceX) > minSwipeDistance;
+
+        if (isHorizontalSwipe && isSignificant) {
+            // Prevent browser back/forward if possible
             const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
-            if (isLeftSwipe && currentIndex < tabs.length - 1) {
+            if (distanceX > 0 && currentIndex < tabs.length - 1) {
+                // Swipe Left -> Next Tab
                 setActiveTab(tabs[currentIndex + 1].id);
-            } else if (isRightSwipe && currentIndex > 0) {
+            } else if (distanceX < 0 && currentIndex > 0) {
+                // Swipe Right -> Prev Tab
                 setActiveTab(tabs[currentIndex - 1].id);
             }
         }
