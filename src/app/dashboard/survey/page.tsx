@@ -118,51 +118,6 @@ export default function SurveyPage() {
         return authorizedStatus && matchesSearch;
     });
 
-    // Custom Scroll Handling
-    const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-    const [scrollInfo, setScrollInfo] = React.useState({ scrollLeft: 0, scrollWidth: 0, clientWidth: 0 });
-
-    const updateScrollInfo = () => {
-        if (scrollContainerRef.current) {
-            const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-            setScrollInfo({ scrollLeft, scrollWidth, clientWidth });
-        }
-    };
-
-    React.useEffect(() => {
-        const container = scrollContainerRef.current;
-        if (container) {
-            updateScrollInfo();
-            container.addEventListener('scroll', updateScrollInfo);
-            window.addEventListener('resize', updateScrollInfo);
-            return () => {
-                container.removeEventListener('scroll', updateScrollInfo);
-                window.removeEventListener('resize', updateScrollInfo);
-            };
-        }
-    }, [filteredSurveys, isLoading]);
-
-    const handleScroll = (direction: 'left' | 'right') => {
-        if (scrollContainerRef.current) {
-            const scrollAmount = 200;
-            scrollContainerRef.current.scrollBy({
-                left: direction === 'left' ? -scrollAmount : scrollAmount,
-                behavior: 'smooth'
-            });
-        }
-    };
-
-    // Calculate slider position and width
-    const { scrollLeft, scrollWidth, clientWidth } = scrollInfo;
-    const isScrollable = scrollWidth > clientWidth;
-    const sliderWidthRatio = isScrollable ? clientWidth / scrollWidth : 1;
-    const sliderLeftRatio = isScrollable ? scrollLeft / (scrollWidth - clientWidth) : 0;
-
-    // Width of the actual slider bar in percentage (min 10% for visibility)
-    const sliderBarWidth = Math.max(sliderWidthRatio * 100, 10);
-    // Left position of the slider bar in percentage, adjusted so it doesn't go off edge
-    const sliderBarLeft = sliderLeftRatio * (100 - sliderBarWidth);
-
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -183,14 +138,14 @@ export default function SurveyPage() {
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Search Header inside Card */}
                 <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h3 className="font-bold text-slate-900 hidden md:block text-lg">List Pengajuan Survey</h3>
+                    <h3 className="font-bold text-slate-900 hidden md:block">List Pengajuan Survey</h3>
 
                     <div className="flex items-center gap-2 max-w-sm w-full">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
                                 placeholder="Cari nama atau no hp..."
-                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-12 w-full focus:bg-white transition-colors rounded-xl font-medium"
+                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -201,7 +156,7 @@ export default function SurveyPage() {
                         </div>
                         <Button
                             onClick={handleSearch}
-                            className="bg-emerald-600 text-white font-bold h-12 px-8 rounded-2xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98]"
+                            className="bg-emerald-600 text-white font-bold h-10 px-6 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98]"
                         >
                             Cari
                         </Button>
@@ -210,7 +165,7 @@ export default function SurveyPage() {
 
                 {/* Tabs Slider inside Card */}
                 <div className="bg-slate-50/50 border-b border-slate-100 px-4 pt-4">
-                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar relative">
+                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar relative z-10">
                         {tabs.map((tab) => (
                             <button
                                 id={`tab-${tab.id}`}
@@ -230,18 +185,15 @@ export default function SurveyPage() {
                 </div>
 
                 {/* Table Section with Horizontal Scroll */}
-                <div
-                    ref={scrollContainerRef}
-                    className="overflow-x-auto scrollbar-hide no-scrollbar px-1"
-                >
+                <div className="overflow-x-auto custom-scrollbar pb-2 px-1">
                     <div className="min-w-full inline-block align-middle">
                         <table className="w-full text-left">
-                            <thead className="bg-[#f8fafc] text-slate-400 text-[10px] md:text-sm uppercase font-black tracking-widest border-b border-slate-100">
+                            <thead className="bg-slate-50 text-slate-400 text-[10px] md:text-sm uppercase font-bold tracking-wider">
                                 <tr>
-                                    <th className="p-5 whitespace-nowrap min-w-[140px]">Customer</th>
-                                    <th className="p-5 whitespace-nowrap min-w-[200px]">Alamat / Lokasi</th>
-                                    <th className="p-5 whitespace-nowrap min-w-[120px]">Tanggal Survey</th>
-                                    <th className="p-5 text-center whitespace-nowrap min-w-[100px]">Status</th>
+                                    <th className="p-4 whitespace-nowrap min-w-[140px]">Customer</th>
+                                    <th className="p-4 whitespace-nowrap min-w-[200px]">Alamat / Lokasi</th>
+                                    <th className="p-4 whitespace-nowrap min-w-[120px]">Tanggal Survey</th>
+                                    <th className="p-4 text-center whitespace-nowrap min-w-[100px]">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50 text-sm">
@@ -254,7 +206,7 @@ export default function SurveyPage() {
                                 ) : (
                                     filteredSurveys.map((survey) => (
                                         <tr key={survey.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="p-5">
+                                            <td className="p-4">
                                                 <div
                                                     className="flex flex-col cursor-pointer group/name min-w-[140px]"
                                                     onClick={() => {
@@ -268,21 +220,21 @@ export default function SurveyPage() {
                                                     <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-5 text-slate-500">
+                                            <td className="p-4 text-slate-500">
                                                 <div className="flex items-start gap-1.5 min-w-[200px]">
-                                                    <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-slate-400 mt-0.5" />
+                                                    <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400 mt-0.5" />
                                                     <span className="text-xs line-clamp-2 leading-relaxed">{survey.customer_address}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-4">
                                                 <div className="flex items-center gap-1.5 text-slate-600 whitespace-nowrap min-w-[120px]">
-                                                    <Calendar className="h-4 w-4 text-slate-400" />
-                                                    <span className="font-bold text-slate-900 text-xs">
+                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span className="font-medium text-xs">
                                                         {formatDate(survey.survey_date)}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="p-5 text-center">
+                                            <td className="p-4 text-center">
                                                 <div className="min-w-[100px] flex justify-center">
                                                     {getStatusBadge(survey.status)}
                                                 </div>
@@ -294,41 +246,6 @@ export default function SurveyPage() {
                         </table>
                     </div>
                 </div>
-
-                {/* CUSTOM CAROUSEL SCROLLBAR (Per Foto) */}
-                {isScrollable && (
-                    <div className="px-4 pb-4 pt-2">
-                        <div className="flex items-center gap-2">
-                            {/* Left Arrow Button */}
-                            <button
-                                onClick={() => handleScroll('left')}
-                                className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-90 transition-transform"
-                            >
-                                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-r-[8px] border-r-current border-b-[5px] border-b-transparent" />
-                            </button>
-
-                            {/* Slider Container */}
-                            <div className="flex-1 h-3 bg-slate-100 rounded-full relative overflow-hidden">
-                                {/* Moving Bar */}
-                                <div
-                                    className="absolute top-0 h-full bg-slate-400 rounded-full transition-all duration-300 ease-out"
-                                    style={{
-                                        width: `${sliderBarWidth}%`,
-                                        left: `${sliderBarLeft}%`
-                                    }}
-                                />
-                            </div>
-
-                            {/* Right Arrow Button */}
-                            <button
-                                onClick={() => handleScroll('right')}
-                                className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-90 transition-transform"
-                            >
-                                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-current border-b-[5px] border-b-transparent" />
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* DETAIL DIALOG */}
