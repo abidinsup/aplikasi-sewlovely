@@ -138,14 +138,14 @@ export default function SurveyPage() {
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Search Header inside Card */}
                 <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h3 className="font-bold text-slate-900 hidden md:block text-lg">Daftar Pengajuan Survey</h3>
+                    <h3 className="font-bold text-slate-900 hidden md:block">List Pengajuan Survey</h3>
 
                     <div className="flex items-center gap-2 max-w-sm w-full">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
-                                placeholder="Cari nama atau ID..."
-                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-12 w-full focus:bg-white transition-colors rounded-xl font-medium"
+                                placeholder="Cari nama atau no hp..."
+                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -156,7 +156,7 @@ export default function SurveyPage() {
                         </div>
                         <Button
                             onClick={handleSearch}
-                            className="bg-[#63e5ff] text-slate-900 font-bold h-12 px-8 rounded-2xl hover:bg-[#4dd0f0] shadow-sm shadow-cyan-100 transition-all active:scale-[0.98]"
+                            className="bg-emerald-600 text-white font-bold h-10 px-6 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98]"
                         >
                             Cari
                         </Button>
@@ -184,65 +184,60 @@ export default function SurveyPage() {
                     </div>
                 </div>
 
-                {/* Table Section with Horizontal Scroll & Prominent Styled Scrollbar */}
-                <div className="overflow-x-auto [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-slate-50 p-1">
+                {/* Table Section with Horizontal Scroll */}
+                <div className="overflow-x-auto custom-scrollbar pb-2 px-1">
                     <div className="min-w-full inline-block align-middle">
-                        <table className="w-full text-left min-w-[800px]">
-                            <thead className="bg-slate-50/50 text-slate-900 text-[11px] md:text-sm uppercase font-black tracking-widest border-b border-slate-100">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50 text-slate-400 text-[10px] md:text-sm uppercase font-bold tracking-wider">
                                 <tr>
-                                    <th className="p-5">Nama Lengkap</th>
-                                    <th className="p-5">Alamat / Lokasi</th>
-                                    <th className="p-5">Tanggal Survey</th>
-                                    <th className="p-5 text-center">Status</th>
+                                    <th className="p-4 whitespace-nowrap min-w-[140px]">Customer</th>
+                                    <th className="p-4 whitespace-nowrap min-w-[200px]">Alamat / Lokasi</th>
+                                    <th className="p-4 whitespace-nowrap min-w-[120px]">Tanggal Survey</th>
+                                    <th className="p-4 text-center whitespace-nowrap min-w-[100px]">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50 text-sm">
                                 {filteredSurveys.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="p-16 text-center text-slate-500 italic font-medium">
+                                        <td colSpan={4} className="p-12 text-center text-slate-500 italic">
                                             Tidak ada data survey ditemukan
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredSurveys.map((survey) => (
                                         <tr key={survey.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="p-5">
+                                            <td className="p-4">
                                                 <div
-                                                    className="flex items-center gap-3 cursor-pointer group/name"
+                                                    className="flex flex-col cursor-pointer group/name min-w-[140px]"
                                                     onClick={() => {
                                                         setSelectedSurvey(survey);
                                                         setIsDetailOpen(true);
                                                     }}
                                                 >
-                                                    <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs group-hover/name:bg-blue-100 transition-colors">
-                                                        {survey.customer_name?.charAt(0) || '?'}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-slate-900 group-hover/name:text-blue-600 transition-colors line-clamp-1 underline-offset-4 hover:underline">
-                                                            {survey.customer_name}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
-                                                    </div>
+                                                    <span className="font-bold text-slate-900 group-hover/name:text-emerald-600 transition-colors line-clamp-1 underline-offset-4 hover:underline">
+                                                        {survey.customer_name}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-5 text-slate-600">
-                                                <div className="flex items-center gap-1.5">
-                                                    <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
-                                                    <span className="text-xs font-medium line-clamp-1">{survey.customer_address}</span>
+                                            <td className="p-4 text-slate-500">
+                                                <div className="flex items-start gap-1.5 min-w-[200px]">
+                                                    <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400 mt-0.5" />
+                                                    <span className="text-xs line-clamp-2 leading-relaxed">{survey.customer_address}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-5">
-                                                <div className="flex items-center gap-1.5 text-slate-600">
-                                                    <Calendar className="h-4 w-4 text-slate-400" />
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-slate-900 text-xs">
-                                                            {formatDate(survey.survey_date)}
-                                                        </span>
-                                                    </div>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-1.5 text-slate-600 whitespace-nowrap min-w-[120px]">
+                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span className="font-medium text-xs">
+                                                        {formatDate(survey.survey_date)}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            <td className="p-5 text-center">
-                                                {getStatusBadge(survey.status)}
+                                            <td className="p-4 text-center">
+                                                <div className="min-w-[100px] flex justify-center">
+                                                    {getStatusBadge(survey.status)}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
