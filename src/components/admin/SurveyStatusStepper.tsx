@@ -56,10 +56,10 @@ export function SurveyStatusStepper({ currentStatus, className }: SurveyStatusSt
                             </div>
 
                             {/* Label */}
-                            <div className="absolute -bottom-12 w-16 md:w-24 text-center flex flex-col items-center px-1">
+                            <div className="absolute -bottom-12 w-12 md:w-24 text-center flex flex-col items-center px-0.5">
                                 <span
                                     className={cn(
-                                        "text-[8px] md:text-[10px] font-bold uppercase tracking-tight md:tracking-wider transition-colors duration-300 leading-[1.1] block break-words",
+                                        "text-[7px] md:text-[10px] font-bold uppercase tracking-tighter md:tracking-wider transition-colors duration-300 leading-[1] block break-words",
                                         isCompleted ? "text-emerald-700" : "text-slate-400",
                                         isCurrent && "text-emerald-900 scale-105"
                                     )}
