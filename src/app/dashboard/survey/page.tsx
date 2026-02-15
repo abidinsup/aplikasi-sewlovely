@@ -210,7 +210,7 @@ export default function SurveyPage() {
 
                 {/* Tabs Slider inside Card */}
                 <div className="bg-slate-50/50 border-b border-slate-100 px-4 pt-4">
-                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar relative z-10">
+                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar relative">
                         {tabs.map((tab) => (
                             <button
                                 id={`tab-${tab.id}`}
