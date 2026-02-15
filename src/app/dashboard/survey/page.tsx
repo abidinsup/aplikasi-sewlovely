@@ -166,10 +166,11 @@ export default function SurveyPage() {
 
             {/* Main Unified Card */}
             <div
-                className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden"
+                className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden touch-pan-y"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
+                style={{ touchAction: 'pan-y' }}
             >
                 {/* Search Header inside Card */}
                 <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -180,7 +181,7 @@ export default function SurveyPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
                                 placeholder="Cari nama atau no hp..."
-                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-10 w-full focus:bg-white transition-colors rounded-xl"
+                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -200,16 +201,16 @@ export default function SurveyPage() {
 
                 {/* Tabs Slider inside Card */}
                 <div className="bg-slate-50/50 border-b border-slate-100 px-4 pt-4">
-                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar">
+                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar relative z-10">
                         {tabs.map((tab) => (
                             <button
                                 id={`tab-${tab.id}`}
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    "px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 border",
+                                    "px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border",
                                     activeTab === tab.id
-                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100 scale-105"
+                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100 scale-105"
                                         : "bg-white text-slate-500 border-slate-100 hover:bg-slate-50 hover:border-slate-200"
                                 )}
                             >
@@ -220,66 +221,68 @@ export default function SurveyPage() {
                 </div>
 
                 {/* Table Section with Slide Transition */}
-                <div className="overflow-hidden relative">
+                <div className="overflow-hidden relative min-h-[200px]">
                     <div
                         key={activeTab}
-                        className="overflow-x-auto animate-in fade-in slide-in-from-right-4 duration-300"
+                        className="animate-in fade-in slide-in-from-right-8 duration-500 ease-out"
                     >
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50/50 text-slate-400 text-[10px] md:text-xs uppercase font-bold tracking-wider">
-                                <tr>
-                                    <th className="p-4">Customer</th>
-                                    <th className="p-4">Alamat / Lokasi</th>
-                                    <th className="p-4">Tanggal Survey</th>
-                                    <th className="p-4 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50 text-sm">
-                                {filteredSurveys.length === 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50/50 text-slate-400 text-[10px] md:text-xs uppercase font-bold tracking-wider">
                                     <tr>
-                                        <td colSpan={4} className="p-12 text-center text-slate-500 italic">
-                                            Tidak ada data survey ditemukan
-                                        </td>
+                                        <th className="p-4">Customer</th>
+                                        <th className="p-4">Alamat / Lokasi</th>
+                                        <th className="p-4">Tanggal Survey</th>
+                                        <th className="p-4 text-center">Status</th>
                                     </tr>
-                                ) : (
-                                    filteredSurveys.map((survey) => (
-                                        <tr key={survey.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="p-4">
-                                                <div
-                                                    className="flex flex-col cursor-pointer group/name"
-                                                    onClick={() => {
-                                                        setSelectedSurvey(survey);
-                                                        setIsDetailOpen(true);
-                                                    }}
-                                                >
-                                                    <span className="font-bold text-slate-900 group-hover/name:text-emerald-600 transition-colors line-clamp-1 underline-offset-4 hover:underline">
-                                                        {survey.customer_name}
-                                                    </span>
-                                                    <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-slate-500">
-                                                <div className="flex items-center gap-1.5 max-w-[200px]">
-                                                    <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
-                                                    <span className="text-xs line-clamp-1">{survey.customer_address}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-1.5 text-slate-600">
-                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                    <span className="font-medium text-xs whitespace-nowrap">
-                                                        {formatDate(survey.survey_date)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                {getStatusBadge(survey.status)}
+                                </thead>
+                                <tbody className="divide-y divide-slate-50 text-sm">
+                                    {filteredSurveys.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="p-12 text-center text-slate-500 italic">
+                                                Tidak ada data survey ditemukan
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        filteredSurveys.map((survey) => (
+                                            <tr key={survey.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                <td className="p-4">
+                                                    <div
+                                                        className="flex flex-col cursor-pointer group/name"
+                                                        onClick={() => {
+                                                            setSelectedSurvey(survey);
+                                                            setIsDetailOpen(true);
+                                                        }}
+                                                    >
+                                                        <span className="font-bold text-slate-900 group-hover/name:text-emerald-600 transition-colors line-clamp-1 underline-offset-4 hover:underline">
+                                                            {survey.customer_name}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 font-medium">{survey.customer_phone}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-slate-500">
+                                                    <div className="flex items-center gap-1.5 max-w-[200px]">
+                                                        <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                                                        <span className="text-xs line-clamp-1">{survey.customer_address}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-1.5 text-slate-600">
+                                                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                        <span className="font-medium text-xs whitespace-nowrap">
+                                                            {formatDate(survey.survey_date)}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    {getStatusBadge(survey.status)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
