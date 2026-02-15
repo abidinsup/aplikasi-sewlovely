@@ -333,7 +333,7 @@ export default function SurveyPage() {
                                                 <p className="text-sm font-bold text-slate-900 capitalize">{selectedSurvey.calculator_type}</p>
                                             </div>
                                         </div>
-                                        {selectedSurvey.notes && (
+                                        {selectedSurvey.notes && ['pending', 'confirmed'].includes(selectedSurvey.status) && (
                                             <div className="pt-2">
                                                 <p className="text-[10px] text-emerald-500 font-bold uppercase mb-1">Catatan Tambahan</p>
                                                 <p className="text-sm text-slate-600 italic bg-white p-2 rounded-lg border border-emerald-50">

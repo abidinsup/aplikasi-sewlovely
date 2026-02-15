@@ -132,11 +132,6 @@ export default function CommissionPage() {
     };
 
     const formatCurrency = (amount: number) => {
-        if (amount >= 1000000) {
-            return `Rp ${(amount / 1000000).toFixed(1)}Jt`;
-        } else if (amount >= 1000) {
-            return `Rp ${(amount / 1000).toFixed(0)}rb`;
-        }
         return `Rp ${amount.toLocaleString('id-ID')}`;
     };
 
