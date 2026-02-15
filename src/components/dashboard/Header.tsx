@@ -121,13 +121,6 @@ export function Header({ onMenuClick, partnerName }: HeaderProps) {
                             <span className="font-bold text-sm text-emerald-700">{initials}</span>
                         </div>
                     </Link>
-                    <button
-                        onClick={handleLogout}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Logout"
-                    >
-                        <LogOut className="h-5 w-5" />
-                    </button>
                 </div>
             </div>
         </header>
