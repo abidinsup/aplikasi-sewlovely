@@ -45,21 +45,21 @@ export function SurveyStatusStepper({ currentStatus, className }: SurveyStatusSt
                             {/* Icon Circle */}
                             <div
                                 className={cn(
-                                    "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white z-10",
+                                    "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white z-10",
                                     isCompleted
                                         ? "border-emerald-500 bg-white text-emerald-600 shadow-md"
                                         : "border-slate-200 text-slate-300",
                                     isCurrent && "ring-4 ring-emerald-100 scale-110 border-emerald-600 text-emerald-700 font-bold shadow-lg"
                                 )}
                             >
-                                <Icon className={cn("w-5 h-5", isCurrent && "animate-pulse")} />
+                                <Icon className={cn("w-3.5 h-3.5 md:w-5 md:h-5", isCurrent && "animate-pulse")} />
                             </div>
 
                             {/* Label */}
-                            <div className="absolute -bottom-12 w-12 md:w-24 text-center flex flex-col items-center px-0.5">
+                            <div className="absolute -bottom-10 md:-bottom-12 w-16 md:w-24 text-center flex flex-col items-center px-0.5">
                                 <span
                                     className={cn(
-                                        "text-[7px] md:text-[10px] font-bold uppercase tracking-tighter md:tracking-wider transition-colors duration-300 leading-[1] block break-words",
+                                        "text-[8px] md:text-[10px] font-bold uppercase tracking-tighter md:tracking-wider transition-colors duration-300 leading-tight block break-words",
                                         isCompleted ? "text-emerald-700" : "text-slate-400",
                                         isCurrent && "text-emerald-900 scale-105"
                                     )}

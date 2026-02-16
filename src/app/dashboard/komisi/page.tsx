@@ -30,7 +30,8 @@ export default function CommissionPage() {
     });
     const [selectedProof, setSelectedProof] = React.useState<{ url: string | null; loading: boolean }>({ url: null, loading: false });
 
-    const fetchTransactions = async (partnerId: string) => {
+    const fetchTransactions = async (partnerId: string, isInitial = false) => {
+        if (isInitial) setIsLoading(true);
         try {
             // Fetch ALL transactions for accurate balance calculation
             const { data: allData, error: allError } = await supabase
@@ -80,9 +81,21 @@ export default function CommissionPage() {
         }
     };
 
+    // Debounce realtime updates
+    const debouncedFetch = React.useRef<NodeJS.Timeout>();
+    const handleRealtimeChange = (id: string) => {
+        if (debouncedFetch.current) clearTimeout(debouncedFetch.current);
+        debouncedFetch.current = setTimeout(() => {
+            fetchTransactions(id);
+        }, 1200); // Slightly different debounce to offset simultaneous hits
+    }
+
     React.useEffect(() => {
         const currentPartner = getCurrentPartner();
-        if (!currentPartner) return;
+        if (!currentPartner) {
+            setIsLoading(false);
+            return;
+        }
 
         const setup = async () => {
             // Fetch latest profile to ensure bank/name info is fresh
@@ -98,7 +111,7 @@ export default function CommissionPage() {
                 setPartner(currentPartner);
             }
 
-            fetchTransactions(currentPartner.id);
+            fetchTransactions(currentPartner.id, true);
         };
 
         setup();
@@ -114,11 +127,12 @@ export default function CommissionPage() {
                     table: 'transactions',
                     filter: `partner_id=eq.${currentPartner.id}`
                 },
-                () => fetchTransactions(currentPartner.id)
+                () => handleRealtimeChange(currentPartner.id)
             )
             .subscribe();
 
         return () => {
+            if (debouncedFetch.current) clearTimeout(debouncedFetch.current);
             supabase.removeChannel(channel);
         };
     }, []);

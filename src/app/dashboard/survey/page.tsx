@@ -36,16 +36,21 @@ export default function SurveyPage() {
     const [selectedSurvey, setSelectedSurvey] = React.useState<SurveySchedule | null>(null);
     const [isDetailOpen, setIsDetailOpen] = React.useState(false);
 
-    const fetchSurveys = async () => {
+    const fetchSurveys = async (isInitial = false) => {
+        if (isInitial) setIsLoading(true);
         try {
             const partner = getCurrentPartner();
-            if (!partner?.id) return;
+            if (!partner?.id) {
+                if (isInitial) setIsLoading(false);
+                return;
+            }
 
             const { data, error } = await supabase
                 .from('survey_schedules')
                 .select('*')
                 .eq('partner_id', partner.id)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(50); // Performance: Limit to last 50 surveys
 
             if (error) throw error;
             setSurveys(data || []);
@@ -57,11 +62,22 @@ export default function SurveyPage() {
         }
     };
 
+    // Debounce realtime updates to avoid "Fetch Storms"
+    const debouncedFetch = React.useRef<NodeJS.Timeout>();
+    const handleRealtimeChange = () => {
+        if (debouncedFetch.current) clearTimeout(debouncedFetch.current);
+        debouncedFetch.current = setTimeout(() => {
+            fetchSurveys();
+        }, 1000); // Wait 1s after last change
+    }
+
     React.useEffect(() => {
         const partner = getCurrentPartner();
-        if (!partner?.id) return;
 
-        fetchSurveys();
+        // Initial fetch
+        fetchSurveys(true);
+
+        if (!partner?.id) return;
 
         // Subscribe to realtime changes for this partner
         const channel = supabase
@@ -74,11 +90,12 @@ export default function SurveyPage() {
                     table: 'survey_schedules',
                     filter: `partner_id=eq.${partner.id}`
                 },
-                () => fetchSurveys()
+                () => handleRealtimeChange()
             )
             .subscribe();
 
         return () => {
+            if (debouncedFetch.current) clearTimeout(debouncedFetch.current);
             supabase.removeChannel(channel);
         };
     }, []);
@@ -159,15 +176,15 @@ export default function SurveyPage() {
             {/* Main Unified Card */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Search Header inside Card */}
-                <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
                     <h3 className="font-bold text-slate-900 hidden md:block">List Pengajuan Survey</h3>
 
-                    <div className="flex items-center gap-2 max-w-sm w-full">
-                        <div className="relative flex-1">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:max-w-md">
+                        <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
                                 placeholder="Cari nama atau no hp..."
-                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
+                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-11 md:h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -178,7 +195,7 @@ export default function SurveyPage() {
                         </div>
                         <Button
                             onClick={handleSearch}
-                            className="bg-emerald-600 text-white font-bold h-10 px-6 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98]"
+                            className="w-full sm:w-auto bg-emerald-600 text-white font-bold h-11 md:h-10 px-8 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98]"
                         >
                             Cari
                         </Button>
@@ -207,35 +224,43 @@ export default function SurveyPage() {
                 </div>
 
                 {/* Mobile Card Layout */}
-                <div className="md:hidden divide-y divide-slate-100">
+                <div className="md:hidden p-4 space-y-4 bg-slate-50/30">
                     {filteredSurveys.length === 0 ? (
-                        <div className="p-12 text-center text-slate-500 italic">
+                        <div className="p-12 text-center text-slate-400 italic bg-white rounded-2xl border border-dashed border-slate-200">
                             Tidak ada data survey ditemukan
                         </div>
                     ) : (
                         filteredSurveys.map((survey) => (
                             <div
                                 key={survey.id}
-                                className="p-4 hover:bg-slate-50/50 transition-colors cursor-pointer active:bg-slate-100"
+                                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
                                 onClick={() => {
                                     setSelectedSurvey(survey);
                                     setIsDetailOpen(true);
                                 }}
                             >
-                                <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-start justify-between gap-3 mb-3">
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-bold text-slate-900 text-sm truncate">{survey.customer_name}</p>
-                                        <p className="text-[11px] text-slate-400 font-medium">{survey.customer_phone}</p>
+                                        <p className="font-extrabold text-slate-900 text-base leading-tight truncate">{survey.customer_name}</p>
+                                        <p className="text-[11px] text-emerald-600 font-bold mt-0.5 tracking-wide">{survey.customer_phone}</p>
                                     </div>
-                                    {getStatusBadge(survey.status)}
+                                    <div className="shrink-0 scale-90 origin-top-right">
+                                        {getStatusBadge(survey.status)}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-slate-500 mt-1">
-                                    <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
-                                    <span className="text-xs truncate">{survey.customer_address}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-slate-500 mt-1.5">
-                                    <Calendar className="h-3 w-3 flex-shrink-0 text-slate-400" />
-                                    <span className="text-xs font-medium">{formatDate(survey.survey_date)}</span>
+                                <div className="space-y-2 pt-2 border-t border-slate-50">
+                                    <div className="flex items-center gap-2 text-slate-500">
+                                        <div className="bg-slate-100 p-1 rounded-md">
+                                            <MapPin className="h-3 w-3 text-slate-400" />
+                                        </div>
+                                        <span className="text-xs text-slate-600 line-clamp-1">{survey.customer_address}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-500">
+                                        <div className="bg-emerald-50 p-1 rounded-md">
+                                            <Calendar className="h-3 w-3 text-emerald-500" />
+                                        </div>
+                                        <span className="text-xs font-semibold text-slate-700">{formatDate(survey.survey_date)}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))
@@ -308,108 +333,111 @@ export default function SurveyPage() {
 
             {/* DETAIL DIALOG */}
             <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl w-[calc(100vw-2rem)] mx-auto">
-                    <DialogHeader>
-                        <div className="pb-4 border-b border-slate-100">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                <DialogTitle className="text-lg sm:text-xl font-bold text-slate-900">
+                <DialogContent className="sm:max-w-2xl w-[95vw] md:w-full max-h-[92vh] flex flex-col p-0 overflow-hidden rounded-[2rem] border-0 shadow-2xl">
+                    <DialogHeader className="p-6 pb-4 border-b border-slate-50 shrink-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <DialogTitle className="text-xl font-extrabold text-slate-900 tracking-tight">
                                     Detail Pengajuan Survey
                                 </DialogTitle>
-                                <div>
-                                    {selectedSurvey && getStatusBadge(selectedSurvey.status)}
-                                </div>
+                                <DialogDescription className="mt-1 text-xs font-medium text-slate-400">
+                                    ID: {selectedSurvey?.id.substring(0, 8)}...
+                                </DialogDescription>
                             </div>
-                            <DialogDescription className="mt-1 text-xs sm:text-sm">
-                                ID: {selectedSurvey?.id.substring(0, 8)}...
-                            </DialogDescription>
+                            <div className="flex items-center gap-2">
+                                {selectedSurvey && getStatusBadge(selectedSurvey.status)}
+                            </div>
                         </div>
                     </DialogHeader>
 
-                    {selectedSurvey && (
-                        <div className="space-y-6 py-4">
-                            {/* Stepper */}
-                            {selectedSurvey.status !== 'cancelled' && (
-                                <div className="-mx-2 px-2 overflow-x-auto pb-2">
-                                    <div className="min-w-[360px]">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                        {selectedSurvey && (
+                            <>
+                                {/* Stepper Section */}
+                                {selectedSurvey.status !== 'cancelled' && (
+                                    <div className="bg-white rounded-2xl pt-2 pb-10">
                                         <SurveyStatusStepper currentStatus={selectedSurvey.status} />
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Customer Info */}
-                                <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest">Informasi Customer</h4>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-white rounded-xl border border-slate-200">
-                                                <ClipboardList className="h-4 w-4 text-emerald-600" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Customer Info */}
+                                    <div className="space-y-4 bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
+                                        <h4 className="font-bold text-[10px] text-slate-400 uppercase tracking-[0.2em] pl-1">Informasi Customer</h4>
+                                        <div className="space-y-4">
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100">
+                                                    <ClipboardList className="h-4 w-4 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Nama</p>
+                                                    <p className="text-sm font-extrabold text-slate-900 mt-0.5">{selectedSurvey.customer_name}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Nama</p>
-                                                <p className="text-sm font-bold text-slate-900">{selectedSurvey.customer_name}</p>
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100">
+                                                    <Phone className="h-4 w-4 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">No. WhatsApp</p>
+                                                    <p className="text-sm font-extrabold text-slate-900 mt-0.5">{selectedSurvey.customer_phone}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-white rounded-xl border border-slate-200">
-                                                <Phone className="h-4 w-4 text-emerald-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">No. WhatsApp</p>
-                                                <p className="text-sm font-bold text-slate-900">{selectedSurvey.customer_phone}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-white rounded-xl border border-slate-200">
-                                                <MapPin className="h-4 w-4 text-emerald-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Alamat</p>
-                                                <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedSurvey.customer_address}</p>
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100">
+                                                    <MapPin className="h-4 w-4 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Alamat</p>
+                                                    <p className="text-sm font-semibold text-slate-600 leading-relaxed mt-0.5">{selectedSurvey.customer_address}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Survey Details */}
-                                <div className="space-y-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                                    <h4 className="font-bold text-xs text-emerald-600 uppercase tracking-widest">Detail Jadwal</h4>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-white rounded-xl border border-emerald-100">
-                                                <Calendar className="h-4 w-4 text-emerald-600" />
+                                    {/* Survey Details */}
+                                    <div className="space-y-4 bg-emerald-50/30 p-5 rounded-3xl border border-emerald-100/50">
+                                        <h4 className="font-bold text-[10px] text-emerald-600 uppercase tracking-[0.2em] pl-1">Detail Jadwal</h4>
+                                        <div className="space-y-4">
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-emerald-100">
+                                                    <Calendar className="h-4 w-4 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Tanggal Survey</p>
+                                                    <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatDate(selectedSurvey.survey_date)}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-[10px] text-emerald-500 font-bold uppercase">Tanggal Survey</p>
-                                                <p className="text-sm font-bold text-slate-900">{formatDate(selectedSurvey.survey_date)}</p>
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-emerald-100">
+                                                    <Map className="h-4 w-4 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Tipe Survey</p>
+                                                    <p className="text-sm font-extrabold text-slate-900 mt-0.5 capitalize">{selectedSurvey.calculator_type}</p>
+                                                </div>
                                             </div>
+                                            {selectedSurvey.notes && ['pending', 'confirmed'].includes(selectedSurvey.status) && (
+                                                <div className="pt-2">
+                                                    <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight mb-1.5 pl-1">Catatan Tambahan</p>
+                                                    <div className="bg-white/80 p-3 rounded-2xl border border-emerald-100 text-sm text-slate-600 italic">
+                                                        &quot;{selectedSurvey.notes}&quot;
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-white rounded-xl border border-emerald-100">
-                                                <Map className="h-4 w-4 text-emerald-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-emerald-500 font-bold uppercase">Tipe Survey</p>
-                                                <p className="text-sm font-bold text-slate-900 capitalize">{selectedSurvey.calculator_type}</p>
-                                            </div>
-                                        </div>
-                                        {selectedSurvey.notes && ['pending', 'confirmed'].includes(selectedSurvey.status) && (
-                                            <div className="pt-2">
-                                                <p className="text-[10px] text-emerald-500 font-bold uppercase mb-1">Catatan Tambahan</p>
-                                                <p className="text-sm text-slate-600 italic bg-white p-2 rounded-lg border border-emerald-50">
-                                                    &quot;{selectedSurvey.notes}&quot;
-                                                </p>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    )}
+                            </>
+                        )}
+                    </div>
 
-                    <div className="flex justify-end pt-4 border-t border-slate-100">
-                        <Button className="bg-emerald-600 hover:bg-emerald-700 font-bold rounded-xl px-8" onClick={() => setIsDetailOpen(false)}>
-                            Tutup
+                    <div className="p-6 border-t border-slate-50 bg-slate-50/50 shrink-0 flex justify-end">
+                        <Button
+                            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl px-12 h-12 shadow-lg shadow-emerald-200"
+                            onClick={() => setIsDetailOpen(false)}
+                        >
+                            Tutup Halaman
                         </Button>
                     </div>
                 </DialogContent>
