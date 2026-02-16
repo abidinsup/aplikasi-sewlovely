@@ -179,11 +179,11 @@ export default function SurveyPage() {
                 <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
                     <h3 className="font-bold text-slate-900 hidden md:block">List Pengajuan Survey</h3>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:max-w-md">
-                        <div className="relative w-full">
+                    <div className="flex items-center gap-2 w-full md:max-w-md">
+                        <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
-                                placeholder="Cari nama atau no hp..."
+                                placeholder="Cari..."
                                 className="!pl-10 bg-slate-50 border-slate-200 text-sm h-11 md:h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
                                 value={searchQuery}
                                 onChange={(e) => {
@@ -195,7 +195,7 @@ export default function SurveyPage() {
                         </div>
                         <Button
                             onClick={handleSearch}
-                            className="w-full sm:w-auto bg-emerald-600 text-white font-bold h-11 md:h-10 px-8 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98]"
+                            className="bg-emerald-600 text-white font-bold h-11 md:h-10 px-5 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98] shrink-0"
                         >
                             Cari
                         </Button>
