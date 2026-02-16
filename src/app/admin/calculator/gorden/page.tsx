@@ -143,7 +143,7 @@ export default function CurtainCalculatorPage() {
                 <div className="flex items-end justify-between px-2">
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estimasi Total</p>
-                        <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+                        <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">
                             Rp {totalPrice.toLocaleString("id-ID")}
                         </h3>
                     </div>
@@ -389,27 +389,26 @@ export default function CurtainCalculatorPage() {
                                     <button
                                         onClick={() => setModel("smokering")}
                                         className={cn(
-                                            "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300",
+                                            "h-auto min-h-[5rem] sm:h-32 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all duration-300",
                                             model === "smokering"
                                                 ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                                 : "bg-white border-slate-100 hover:bg-slate-50"
                                         )}
                                     >
-                                        <Grid className={cn("h-8 w-8", model === "smokering" ? "text-emerald-600" : "text-slate-400")} />
-                                        <span className={cn("text-sm font-bold", model === "smokering" ? "text-emerald-700" : "text-slate-500")}>Smokering</span>
+                                        <Grid className={cn("h-6 w-6 sm:h-8 sm:w-8", model === "smokering" ? "text-emerald-600" : "text-slate-400")} />
+                                        <span className={cn("text-xs sm:text-sm font-bold", model === "smokering" ? "text-emerald-700" : "text-slate-500")}>Smokering</span>
                                     </button>
-
                                     <button
                                         onClick={() => setModel("cantel")}
                                         className={cn(
-                                            "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300",
+                                            "h-auto min-h-[5rem] sm:h-32 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all duration-300",
                                             model === "cantel"
                                                 ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                                 : "bg-white border-slate-100 hover:bg-slate-50"
                                         )}
                                     >
-                                        <LinkIcon className={cn("h-8 w-8", model === "cantel" ? "text-emerald-600" : "text-slate-400")} />
-                                        <span className={cn("text-sm font-bold", model === "cantel" ? "text-emerald-700" : "text-slate-500")}>Cantel</span>
+                                        <LinkIcon className={cn("h-6 w-6 sm:h-8 sm:w-8", model === "cantel" ? "text-emerald-600" : "text-slate-400")} />
+                                        <span className={cn("text-xs sm:text-sm font-bold", model === "cantel" ? "text-emerald-700" : "text-slate-500")}>Cantel</span>
                                     </button>
                                 </div>
                             </section>

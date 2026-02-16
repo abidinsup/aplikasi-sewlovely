@@ -224,12 +224,12 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
 
                     {/* 1. Ukuran Jendela */}
                     <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><Grid className="h-5 w-5" /></div>
-                                <h2 className="font-bold text-slate-900 text-lg">Ukuran Jendela</h2>
+                                <h2 className="font-bold text-slate-900 text-base sm:text-lg">Ukuran Jendela</h2>
                             </div>
-                            <Button onClick={addWindow} size="sm" variant="outline" className="text-xs h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
+                            <Button onClick={addWindow} size="sm" variant="outline" className="text-[11px] sm:text-xs h-7 sm:h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
                                 <Plus className="h-3 w-3" /> Tambah Jendela
                             </Button>
                         </div>
@@ -288,43 +288,43 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                             <button
                                 onClick={() => setBlindType("roller")}
                                 className={cn(
-                                    "h-32 px-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 text-center relative overflow-hidden",
+                                    "h-auto min-h-[4rem] sm:h-32 px-4 sm:px-4 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start sm:items-center justify-center gap-1 sm:gap-2 transition-all duration-300 text-left sm:text-center relative overflow-hidden",
                                     blindType === "roller"
                                         ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                         : "bg-white border-slate-100 hover:bg-slate-50"
                                 )}
                             >
-                                <span className={cn("font-bold text-lg", blindType === "roller" ? "text-emerald-800" : "text-slate-800")}>Roller Blind</span>
-                                <span className="text-xs font-medium text-slate-500">Minimalis & Modern</span>
-                                {blindType === "roller" && <div className="absolute top-2 right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
+                                <span className={cn("font-bold text-base sm:text-lg", blindType === "roller" ? "text-emerald-800" : "text-slate-800")}>Roller Blind</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-slate-500">Minimalis & Modern</span>
+                                {blindType === "roller" && <div className="absolute top-1/2 -translate-y-1/2 sm:top-2 sm:translate-y-0 right-3 sm:right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
                             </button>
 
                             <button
                                 onClick={() => setBlindType("vertical")}
                                 className={cn(
-                                    "h-32 px-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 text-center relative overflow-hidden",
+                                    "h-auto min-h-[4rem] sm:h-32 px-4 sm:px-4 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start sm:items-center justify-center gap-1 sm:gap-2 transition-all duration-300 text-left sm:text-center relative overflow-hidden",
                                     blindType === "vertical"
                                         ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                         : "bg-white border-slate-100 hover:bg-slate-50"
                                 )}
                             >
-                                <span className={cn("font-bold text-lg", blindType === "vertical" ? "text-emerald-800" : "text-slate-800")}>Vertical Blind</span>
-                                <span className="text-xs font-medium text-slate-500">Untuk Jendela Tinggi</span>
-                                {blindType === "vertical" && <div className="absolute top-2 right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
+                                <span className={cn("font-bold text-base sm:text-lg", blindType === "vertical" ? "text-emerald-800" : "text-slate-800")}>Vertical Blind</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-slate-500">Untuk Jendela Tinggi</span>
+                                {blindType === "vertical" && <div className="absolute top-1/2 -translate-y-1/2 sm:top-2 sm:translate-y-0 right-3 sm:right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
                             </button>
 
                             <button
                                 onClick={() => setBlindType("venetian")}
                                 className={cn(
-                                    "h-32 px-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 text-center relative overflow-hidden",
+                                    "h-auto min-h-[4rem] sm:h-32 px-4 sm:px-4 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start sm:items-center justify-center gap-1 sm:gap-2 transition-all duration-300 text-left sm:text-center relative overflow-hidden",
                                     blindType === "venetian"
                                         ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                         : "bg-white border-slate-100 hover:bg-slate-50"
                                 )}
                             >
-                                <span className={cn("font-bold text-lg", blindType === "venetian" ? "text-emerald-800" : "text-slate-800")}>Venetian Blind</span>
-                                <span className="text-xs font-medium text-slate-500">Klasik Aluminium</span>
-                                {blindType === "venetian" && <div className="absolute top-2 right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
+                                <span className={cn("font-bold text-base sm:text-lg", blindType === "venetian" ? "text-emerald-800" : "text-slate-800")}>Venetian Blind</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-slate-500">Klasik Aluminium</span>
+                                {blindType === "venetian" && <div className="absolute top-1/2 -translate-y-1/2 sm:top-2 sm:translate-y-0 right-3 sm:right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
                             </button>
                         </div>
                     </section>

@@ -134,7 +134,7 @@ export default function HospitalCalculatorPage() {
                 <div className="flex items-end justify-between px-2">
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estimasi Total</p>
-                        <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+                        <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">
                             Rp {totalPrice.toLocaleString("id-ID")}
                         </h3>
                     </div>
