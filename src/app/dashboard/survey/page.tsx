@@ -203,15 +203,15 @@ export default function SurveyPage() {
                 </div>
 
                 {/* Tabs Slider inside Card */}
-                <div className="bg-slate-50/50 border-b border-slate-100 px-4 pt-4">
-                    <div className="flex gap-2 pb-4 overflow-x-auto scrollbar-hide no-scrollbar relative z-10">
+                <div className="bg-slate-50/50 border-b border-slate-100 px-4 pt-4 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-2 pb-4 min-w-max">
                         {tabs.map((tab) => (
                             <button
                                 id={`tab-${tab.id}`}
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    "px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border",
+                                    "px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0",
                                     activeTab === tab.id
                                         ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100 scale-105"
                                         : "bg-white text-slate-500 border-slate-100 hover:bg-slate-50 hover:border-slate-200"
@@ -355,7 +355,7 @@ export default function SurveyPage() {
                             <>
                                 {/* Stepper Section */}
                                 {selectedSurvey.status !== 'cancelled' && (
-                                    <div className="bg-white rounded-2xl pt-2 pb-10">
+                                    <div className="bg-white rounded-2xl pt-2 pb-10 overflow-x-auto scrollbar-hide">
                                         <SurveyStatusStepper currentStatus={selectedSurvey.status} />
                                     </div>
                                 )}
