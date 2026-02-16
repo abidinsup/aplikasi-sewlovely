@@ -184,24 +184,24 @@ export default function SurveyCard({ survey, onUpdateStatus, onDisburseCommissio
                                 <span className="font-bold">{survey.survey_time} WIB</span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                 <div className="flex items-center gap-2 text-slate-600">
                                     <div className="p-1.5 bg-slate-100 rounded-lg">
-                                        <User className="h-4 w-4 text-slate-500" />
+                                        <User className="h-3.5 w-3.5 text-slate-500" />
                                     </div>
-                                    <span className="font-medium">{survey.customer_name}</span>
+                                    <span className="font-medium text-xs">{survey.customer_name}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-slate-600">
                                     <div className="p-1.5 bg-slate-100 rounded-lg">
-                                        <Phone className="h-4 w-4 text-slate-500" />
+                                        <Phone className="h-3.5 w-3.5 text-slate-500" />
                                     </div>
-                                    <span className="font-medium">{survey.customer_phone}</span>
+                                    <span className="font-medium text-xs">{survey.customer_phone}</span>
                                 </div>
                                 <div className="flex items-start gap-2 text-slate-600 md:col-span-2">
                                     <div className="p-1.5 bg-slate-100 rounded-lg mt-0.5">
-                                        <MapPin className="h-4 w-4 text-slate-500" />
+                                        <MapPin className="h-3.5 w-3.5 text-slate-500" />
                                     </div>
-                                    <span className="font-medium leading-relaxed">{survey.customer_address}</span>
+                                    <span className="font-medium text-[11px] leading-relaxed">{survey.customer_address}</span>
                                 </div>
                             </div>
 

@@ -25,7 +25,7 @@ export function SurveyStatusStepper({ currentStatus, className }: SurveyStatusSt
 
     return (
         <div className={cn("w-full py-2", className)}>
-            <div className="relative flex items-center justify-between w-full min-w-[450px] md:min-w-0 px-4 md:px-0">
+            <div className="relative flex items-center justify-between w-full min-w-[650px] md:min-w-0 px-10 md:px-0">
                 {/* Connecting Line Background */}
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 -z-10 rounded-full" />
 

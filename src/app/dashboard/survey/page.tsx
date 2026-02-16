@@ -176,7 +176,7 @@ export default function SurveyPage() {
             {/* Main Unified Card */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Search Header inside Card */}
-                <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+                <div className="p-3 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 md:gap-4">
                     <h3 className="font-bold text-slate-900 hidden md:block">List Pengajuan Survey</h3>
 
                     <div className="flex items-center gap-2 w-full md:max-w-md">
@@ -184,7 +184,7 @@ export default function SurveyPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
                                 placeholder="Cari..."
-                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-11 md:h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
+                                className="!pl-10 bg-slate-50 border-slate-200 text-sm h-10 w-full focus:bg-white transition-colors rounded-xl font-medium"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -195,7 +195,7 @@ export default function SurveyPage() {
                         </div>
                         <Button
                             onClick={handleSearch}
-                            className="bg-emerald-600 text-white font-bold h-11 md:h-10 px-5 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98] shrink-0"
+                            className="bg-emerald-600 text-white font-bold h-10 px-4 rounded-xl hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition-all active:scale-[0.98] shrink-0"
                         >
                             Cari
                         </Button>
@@ -203,17 +203,17 @@ export default function SurveyPage() {
                 </div>
 
                 {/* Tabs Slider inside Card */}
-                <div className="bg-slate-50/50 border-b border-slate-100 px-4 pt-4 overflow-x-auto scrollbar-hide">
-                    <div className="flex gap-2 pb-4 min-w-max">
+                <div className="bg-slate-50/50 border-b border-slate-100 px-3 pt-3 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-2 pb-3 min-w-max">
                         {tabs.map((tab) => (
                             <button
                                 id={`tab-${tab.id}`}
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    "px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0",
+                                    "px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-300 border flex-shrink-0",
                                     activeTab === tab.id
-                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100 scale-105"
+                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
                                         : "bg-white text-slate-500 border-slate-100 hover:bg-slate-50 hover:border-slate-200"
                                 )}
                             >
@@ -224,42 +224,38 @@ export default function SurveyPage() {
                 </div>
 
                 {/* Mobile Card Layout */}
-                <div className="md:hidden p-4 space-y-4 bg-slate-50/30">
+                <div className="md:hidden p-3 space-y-3 bg-slate-50/30">
                     {filteredSurveys.length === 0 ? (
-                        <div className="p-12 text-center text-slate-400 italic bg-white rounded-2xl border border-dashed border-slate-200">
+                        <div className="p-10 text-center text-slate-400 italic bg-white rounded-2xl border border-dashed border-slate-200">
                             Tidak ada data survey ditemukan
                         </div>
                     ) : (
                         filteredSurveys.map((survey) => (
                             <div
                                 key={survey.id}
-                                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
+                                className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.99]"
                                 onClick={() => {
                                     setSelectedSurvey(survey);
                                     setIsDetailOpen(true);
                                 }}
                             >
-                                <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="flex items-start justify-between gap-3 mb-2">
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-extrabold text-slate-900 text-base leading-tight truncate">{survey.customer_name}</p>
-                                        <p className="text-[11px] text-emerald-600 font-bold mt-0.5 tracking-wide">{survey.customer_phone}</p>
+                                        <p className="font-bold text-slate-900 text-[15px] leading-tight truncate">{survey.customer_name}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">{survey.customer_phone}</p>
                                     </div>
                                     <div className="shrink-0 scale-90 origin-top-right">
                                         {getStatusBadge(survey.status)}
                                     </div>
                                 </div>
-                                <div className="space-y-2 pt-2 border-t border-slate-50">
+                                <div className="flex flex-col gap-1 pt-2 border-t border-slate-50">
                                     <div className="flex items-center gap-2 text-slate-500">
-                                        <div className="bg-slate-100 p-1 rounded-md">
-                                            <MapPin className="h-3 w-3 text-slate-400" />
-                                        </div>
-                                        <span className="text-xs text-slate-600 line-clamp-1">{survey.customer_address}</span>
+                                        <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                                        <span className="text-[11px] text-slate-600 line-clamp-1">{survey.customer_address}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-500">
-                                        <div className="bg-emerald-50 p-1 rounded-md">
-                                            <Calendar className="h-3 w-3 text-emerald-500" />
-                                        </div>
-                                        <span className="text-xs font-semibold text-slate-700">{formatDate(survey.survey_date)}</span>
+                                        <Calendar className="h-3 w-3 flex-shrink-0 text-emerald-500" />
+                                        <span className="text-[11px] font-bold text-slate-700">{formatDate(survey.survey_date)}</span>
                                     </div>
                                 </div>
                             </div>
