@@ -305,28 +305,30 @@ export default function SurveysPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
-                {[
-                    { value: "all", label: "Semua" },
-                    { value: "pending", label: "Penjadwalan" },
-                    { value: "confirmed", label: "Survey Visit" },
-                    { value: "completed", label: "Hasil Visit" },
-                    { value: "installation", label: "Pemasangan" },
-                    { value: "done", label: "Selesai" },
-                ].map((tab) => (
-                    <button
-                        key={tab.value}
-                        onClick={() => setFilter(tab.value as typeof filter)}
-                        className={cn(
-                            "px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap",
-                            filter === tab.value
-                                ? "bg-slate-900 text-white"
-                                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                        )}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+            <div className="w-full overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className="flex gap-2 pb-2 min-w-max">
+                    {[
+                        { value: "all", label: "Semua" },
+                        { value: "pending", label: "Penjadwalan" },
+                        { value: "confirmed", label: "Survey Visit" },
+                        { value: "completed", label: "Hasil Visit" },
+                        { value: "installation", label: "Pemasangan" },
+                        { value: "done", label: "Selesai" },
+                    ].map((tab) => (
+                        <button
+                            key={tab.value}
+                            onClick={() => setFilter(tab.value as typeof filter)}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0",
+                                filter === tab.value
+                                    ? "bg-slate-900 text-white"
+                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                            )}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Content */}
