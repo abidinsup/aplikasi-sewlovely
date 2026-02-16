@@ -289,13 +289,13 @@ export default function AdminPaymentsPage() {
                         className="pl-10"
                     />
                 </div>
-                <div className="flex gap-2">
-                    <div className="bg-slate-100 p-1 rounded-xl flex">
+                <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
+                    <div className="bg-slate-100 p-1 rounded-xl flex w-fit min-w-full">
                         <Button
                             variant={filterStatus === 'pending' ? "default" : "ghost"}
                             onClick={() => setFilterStatus('pending')}
                             className={cn(
-                                "rounded-lg px-4 h-9 text-sm font-bold transition-all",
+                                "rounded-lg px-4 h-9 text-xs sm:text-sm font-bold transition-all flex-shrink-0",
                                 filterStatus === 'pending' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-transparent"
                             )}
                         >
@@ -305,7 +305,7 @@ export default function AdminPaymentsPage() {
                             variant={filterStatus === 'paid' ? "default" : "ghost"}
                             onClick={() => setFilterStatus('paid')}
                             className={cn(
-                                "rounded-lg px-4 h-9 text-sm font-bold transition-all",
+                                "rounded-lg px-4 h-9 text-xs sm:text-sm font-bold transition-all flex-shrink-0",
                                 filterStatus === 'paid' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-transparent"
                             )}
                         >
@@ -315,7 +315,7 @@ export default function AdminPaymentsPage() {
                             variant={filterStatus === 'cancelled' ? "default" : "ghost"}
                             onClick={() => setFilterStatus('cancelled')}
                             className={cn(
-                                "rounded-lg px-4 h-9 text-sm font-bold transition-all",
+                                "rounded-lg px-4 h-9 text-xs sm:text-sm font-bold transition-all flex-shrink-0",
                                 filterStatus === 'cancelled' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-transparent"
                             )}
                         >
@@ -339,8 +339,9 @@ export default function AdminPaymentsPage() {
                 ) : (
                     <div className="divide-y divide-slate-100">
                         {filteredInvoices.map((invoice) => (
-                            <div key={invoice.id} className="p-6 hover:bg-slate-50 transition-colors">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div key={invoice.id} className="group transition-colors">
+                                {/* Desktop Layout */}
+                                <div className="hidden md:flex p-6 items-center justify-between gap-4 hover:bg-slate-50">
                                     <div className="flex items-start gap-4">
                                         <div className={cn(
                                             "p-3 rounded-xl",
@@ -389,7 +390,6 @@ export default function AdminPaymentsPage() {
                                                     onClick={async () => {
                                                         setSelectedInvoice(invoice);
                                                         setShowApproveDialog(true);
-                                                        // Load proof image if available
                                                         if (invoice.payment_proof_url) {
                                                             setIsLoadingProof(true);
                                                             const url = await getPaymentProofUrl(invoice.payment_proof_url);
@@ -423,6 +423,55 @@ export default function AdminPaymentsPage() {
                                                     <XCircle className="h-4 w-4" />
                                                 </Button>
                                             </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Mobile Card Layout */}
+                                <div className="md:hidden p-4 space-y-3 bg-white" onClick={async () => {
+                                    if (invoice.payment_status === 'pending') {
+                                        setSelectedInvoice(invoice);
+                                        setShowApproveDialog(true);
+                                        if (invoice.payment_proof_url) {
+                                            setIsLoadingProof(true);
+                                            const url = await getPaymentProofUrl(invoice.payment_proof_url);
+                                            setProofImageUrl(url);
+                                            setIsLoadingProof(false);
+                                        } else {
+                                            setProofImageUrl(null);
+                                        }
+                                    }
+                                }}>
+                                    <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{invoice.invoice_number}</p>
+                                            <h4 className="font-extrabold text-slate-900 leading-tight">{invoice.customer_name}</h4>
+                                            <p className="text-[11px] font-semibold text-blue-600">Rp {invoice.total_amount.toLocaleString('id-ID')}</p>
+                                        </div>
+                                        <span className={cn(
+                                            "px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase",
+                                            invoice.payment_status === 'pending' ? "bg-amber-100 text-amber-700" :
+                                                invoice.payment_status === 'paid' ? "bg-emerald-100 text-emerald-700" :
+                                                    "bg-red-100 text-red-700"
+                                        )}>
+                                            {invoice.payment_status === 'pending' ? 'Pending' :
+                                                invoice.payment_status === 'paid' ? 'Lunas' : 'Ditolak'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-slate-400 font-medium">{formatDate(invoice.created_at)}</span>
+                                            {invoice.partners && (
+                                                <span className="text-[10px] text-emerald-600 font-bold uppercase mt-0.5">
+                                                    Mitra: {invoice.partners.full_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {invoice.payment_status === 'pending' && (
+                                            <Button size="sm" className="h-8 bg-emerald-600 text-white text-[10px] font-bold px-4 rounded-lg">
+                                                Review
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
