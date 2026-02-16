@@ -251,12 +251,12 @@ export default function CurtainCalculatorPage() {
 
                         {/* 1. Ukuran Jendela */}
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
                                 <div className="flex items-center gap-2">
                                     <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><Grid className="h-5 w-5" /></div>
-                                    <h2 className="font-bold text-slate-900 text-lg">Ukuran Jendela</h2>
+                                    <h2 className="font-bold text-slate-900 text-base sm:text-lg">Ukuran Jendela</h2>
                                 </div>
-                                <Button onClick={addWindow} size="sm" variant="outline" className="text-xs h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
+                                <Button onClick={addWindow} size="sm" variant="outline" className="text-[11px] sm:text-xs h-7 sm:h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
                                     <Plus className="h-3 w-3" /> Tambah Jendela
                                 </Button>
                             </div>
@@ -322,56 +322,56 @@ export default function CurtainCalculatorPage() {
                                 <button
                                     onClick={() => setFabric("blackout")}
                                     className={cn(
-                                        "h-24 px-6 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
                                         fabric === "blackout"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
-                                    <span className={cn("font-bold text-lg", fabric === "blackout" ? "text-emerald-800" : "text-slate-800")}>Blackout</span>
-                                    <span className="text-xs uppercase font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Blokir 100% Cahaya</span>
-                                    {fabric === "blackout" && <div className="absolute top-1/2 -translate-y-1/2 right-6 text-emerald-500"><CheckCircle2 className="h-6 w-6" /></div>}
+                                    <span className={cn("font-bold text-base sm:text-lg", fabric === "blackout" ? "text-emerald-800" : "text-slate-800")}>Blackout</span>
+                                    <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 100% Cahaya</span>
+                                    {fabric === "blackout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
 
                                 <button
                                     onClick={() => setFabric("dimout")}
                                     className={cn(
-                                        "h-24 px-6 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
                                         fabric === "dimout"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
-                                    <span className={cn("font-bold text-lg", fabric === "dimout" ? "text-emerald-800" : "text-slate-800")}>Dimout</span>
-                                    <span className="text-xs uppercase font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Blokir 80% Cahaya</span>
-                                    {fabric === "dimout" && <div className="absolute top-1/2 -translate-y-1/2 right-6 text-emerald-500"><CheckCircle2 className="h-6 w-6" /></div>}
+                                    <span className={cn("font-bold text-base sm:text-lg", fabric === "dimout" ? "text-emerald-800" : "text-slate-800")}>Dimout</span>
+                                    <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 80% Cahaya</span>
+                                    {fabric === "dimout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
                             </div>
 
                             {/* Vitrace Toggle */}
                             <div className={cn(
-                                "flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
+                                "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
                                 useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
                             )} onClick={() => setUseVitrace(!useVitrace)}>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2.5 sm:gap-4">
                                     <div className={cn(
-                                        "p-2.5 rounded-xl transition-colors",
+                                        "p-2 sm:p-2.5 rounded-xl transition-colors",
                                         useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
                                     )}>
-                                        <Sun className="h-6 w-6" />
+                                        <Sun className="h-5 w-5 sm:h-6 sm:w-6" />
                                     </div>
                                     <div>
-                                        <span className="font-bold text-base text-slate-800 block">Tambahkan Vitrace</span>
-                                        <span className="text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
+                                        <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
+                                        <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
                                     </div>
                                 </div>
                                 <div className={cn(
-                                    "w-14 h-8 rounded-full transition-all duration-300 relative border",
+                                    "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
                                     useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
                                 )}>
                                     <div className={cn(
-                                        "absolute top-1/2 -translate-y-1/2 h-6 w-6 bg-white rounded-full shadow-sm transition-all duration-300",
-                                        useVitrace ? "left-[calc(100%-26px)]" : "left-[2px]"
+                                        "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
+                                        useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
                                     )}></div>
                                 </div>
                             </div>

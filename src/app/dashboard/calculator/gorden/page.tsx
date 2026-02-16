@@ -20,6 +20,7 @@ export default function SurveyRequestPage() {
     const [customerInfo, setCustomerInfo] = React.useState({ name: "", phone: "", address: "" });
     const [surveyDate, setSurveyDate] = React.useState<string>("");
     const [surveyTime, setSurveyTime] = React.useState<string>("");
+    const [bookedTimes, setBookedTimes] = React.useState<string[]>([]);;
 
     // All available time slots
     const allTimeSlots = [
@@ -47,24 +48,40 @@ export default function SurveyRequestPage() {
         return now.toISOString().split('T')[0];
     };
 
-    // Get available time slots based on selected date
+    // Get available time slots based on selected date (excluding booked)
     const getAvailableTimeSlots = () => {
         const today = new Date().toISOString().split('T')[0];
+        let slots = allTimeSlots;
 
-        // If not today, all slots are available
-        if (surveyDate !== today) {
-            return allTimeSlots;
+        // Filter out past times if today
+        if (surveyDate === today) {
+            const currentHour = new Date().getHours();
+            slots = slots.filter(slot => {
+                const slotHour = parseInt(slot.value.split(':')[0]);
+                return slotHour > currentHour;
+            });
         }
 
-        // If today, filter out past times
-        const currentHour = new Date().getHours();
-        return allTimeSlots.filter(slot => {
-            const slotHour = parseInt(slot.value.split(':')[0]);
-            return slotHour > currentHour;
-        });
+        // Filter out booked times
+        return slots.filter(slot => !bookedTimes.includes(slot.value));
     };
 
-    // Reset time when date changes if selected time is no longer available
+    // Fetch booked slots when date changes
+    React.useEffect(() => {
+        if (!surveyDate) {
+            setBookedTimes([]);
+            return;
+        }
+        const fetchBooked = async () => {
+            const { data } = await supabase
+                .from('survey_schedules')
+                .select('survey_time')
+                .eq('survey_date', surveyDate)
+                .in('status', ['pending', 'confirmed']);
+            setBookedTimes(data?.map(d => d.survey_time) || []);
+        };
+        fetchBooked();
+    }, [surveyDate]);
     React.useEffect(() => {
         const availableSlots = getAvailableTimeSlots();
         if (surveyTime && !availableSlots.find(s => s.value === surveyTime)) {

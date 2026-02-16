@@ -115,6 +115,7 @@ function InvoiceContent() {
                     fabricType: data.fabricType,
                     railType: data.railType,
                     windows: data.windows,
+                    unitPrice: data.unitPrice,
                     affiliateCode: data.affiliateCode,
                     kodeGordenPhoto: data.kodeGordenPhoto,
                     motifGordenPhoto: data.motifGordenPhoto,

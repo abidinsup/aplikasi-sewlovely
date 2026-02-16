@@ -114,6 +114,7 @@ function InvoiceContent() {
                 details: {
                     blindType: data.blindType,
                     windows: data.windows,
+                    unitPrice: data.unitPrice,
                     affiliateCode: data.affiliateCode,
                     kodeGordenPhoto: data.kodeGordenPhoto,
                     motifGordenPhoto: data.motifGordenPhoto,

@@ -84,7 +84,7 @@ export default function DashboardPage() {
                         {isMounted ? sliderTitle : "Raih Bonusnya! \n Selesaikan 5 Pemasangan"}
                     </h3>
                     <p className="text-emerald-100/90 text-sm md:text-base max-w-lg mt-2">
-                        {isMounted ? sliderDescription : "Selesaikan 5 pemasangan minggu ini dan dapatkan bonus komisi tambahan"} <span className="font-bold text-yellow-300">{isMounted ? sliderHighlight : "Rp 300.000"}</span>
+                        {isMounted ? sliderDescription : "Selesaikan 5 projek pemasangan dan dapatkan bonus komisi tambahan"} <span className="font-bold text-yellow-300">{isMounted ? sliderHighlight : "Rp 300.000"}</span>
                     </p>
                 </div>
             </div>

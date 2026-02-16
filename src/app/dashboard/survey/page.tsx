@@ -206,11 +206,47 @@ export default function SurveyPage() {
                     </div>
                 </div>
 
-                {/* Table Section with Horizontal Scroll */}
-                <div className="overflow-x-auto custom-scrollbar pb-2 px-1">
+                {/* Mobile Card Layout */}
+                <div className="md:hidden divide-y divide-slate-100">
+                    {filteredSurveys.length === 0 ? (
+                        <div className="p-12 text-center text-slate-500 italic">
+                            Tidak ada data survey ditemukan
+                        </div>
+                    ) : (
+                        filteredSurveys.map((survey) => (
+                            <div
+                                key={survey.id}
+                                className="p-4 hover:bg-slate-50/50 transition-colors cursor-pointer active:bg-slate-100"
+                                onClick={() => {
+                                    setSelectedSurvey(survey);
+                                    setIsDetailOpen(true);
+                                }}
+                            >
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-slate-900 text-sm truncate">{survey.customer_name}</p>
+                                        <p className="text-[11px] text-slate-400 font-medium">{survey.customer_phone}</p>
+                                    </div>
+                                    {getStatusBadge(survey.status)}
+                                </div>
+                                <div className="flex items-center gap-1.5 text-slate-500 mt-1">
+                                    <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                                    <span className="text-xs truncate">{survey.customer_address}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-slate-500 mt-1.5">
+                                    <Calendar className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                                    <span className="text-xs font-medium">{formatDate(survey.survey_date)}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden md:block overflow-x-auto custom-scrollbar pb-2 px-1">
                     <div className="min-w-full inline-block align-middle">
                         <table className="w-full text-left">
-                            <thead className="bg-slate-50 text-slate-400 text-[10px] md:text-sm uppercase font-bold tracking-wider">
+                            <thead className="bg-slate-50 text-slate-400 text-sm uppercase font-bold tracking-wider">
                                 <tr>
                                     <th className="p-4 whitespace-nowrap min-w-[140px]">Customer</th>
                                     <th className="p-4 whitespace-nowrap min-w-[200px]">Alamat / Lokasi</th>
@@ -272,20 +308,20 @@ export default function SurveyPage() {
 
             {/* DETAIL DIALOG */}
             <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl w-[calc(100vw-2rem)] mx-auto">
                     <DialogHeader>
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                            <div>
-                                <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <div className="pb-4 border-b border-slate-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <DialogTitle className="text-lg sm:text-xl font-bold text-slate-900">
                                     Detail Pengajuan Survey
-                                    <div className="ml-2">
-                                        {selectedSurvey && getStatusBadge(selectedSurvey.status)}
-                                    </div>
                                 </DialogTitle>
-                                <DialogDescription className="mt-1">
-                                    ID: {selectedSurvey?.id.substring(0, 8)}...
-                                </DialogDescription>
+                                <div>
+                                    {selectedSurvey && getStatusBadge(selectedSurvey.status)}
+                                </div>
                             </div>
+                            <DialogDescription className="mt-1 text-xs sm:text-sm">
+                                ID: {selectedSurvey?.id.substring(0, 8)}...
+                            </DialogDescription>
                         </div>
                     </DialogHeader>
 
@@ -293,8 +329,10 @@ export default function SurveyPage() {
                         <div className="space-y-6 py-4">
                             {/* Stepper */}
                             {selectedSurvey.status !== 'cancelled' && (
-                                <div className="px-2 overflow-x-auto pb-2">
-                                    <SurveyStatusStepper currentStatus={selectedSurvey.status} />
+                                <div className="-mx-2 px-2 overflow-x-auto pb-2">
+                                    <div className="min-w-[360px]">
+                                        <SurveyStatusStepper currentStatus={selectedSurvey.status} />
+                                    </div>
                                 </div>
                             )}
 

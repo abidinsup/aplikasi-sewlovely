@@ -117,6 +117,7 @@ function InvoiceContent() {
                     motifCode: data.motifCode,
                     useVitrace: data.useVitrace,
                     windows: data.windows,
+                    unitPrice: data.unitPrice,
                     affiliateCode: data.affiliateCode,
                     kodeGordenPhoto: data.kodeGordenPhoto, // Include photos if available
                     motifGordenPhoto: data.motifGordenPhoto,

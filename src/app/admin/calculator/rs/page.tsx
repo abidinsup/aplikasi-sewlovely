@@ -231,12 +231,12 @@ export default function HospitalCalculatorPage() {
 
                         {/* 1. Ukuran Jendela */}
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
                                 <div className="flex items-center gap-2">
                                     <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><Grid className="h-5 w-5" /></div>
-                                    <h2 className="font-bold text-slate-900 text-lg">Ukuran Bidang</h2>
+                                    <h2 className="font-bold text-slate-900 text-base sm:text-lg">Ukuran Bidang</h2>
                                 </div>
-                                <Button onClick={addWindow} size="sm" variant="outline" className="text-xs h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
+                                <Button onClick={addWindow} size="sm" variant="outline" className="text-[11px] sm:text-xs h-7 sm:h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
                                     <Plus className="h-3 w-3" /> Tambah Bidang
                                 </Button>
                             </div>
@@ -295,35 +295,35 @@ export default function HospitalCalculatorPage() {
                                 <button
                                     onClick={() => setFabricType("antibakteri")}
                                     className={cn(
-                                        "h-24 px-6 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
                                         fabricType === "antibakteri"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
                                     <div className="flex items-center gap-2 text-emerald-800">
-                                        <Stethoscope className="h-5 w-5" />
-                                        <span className="font-bold text-lg">Anti Bakteri (Polyester)</span>
+                                        <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5" />
+                                        <span className="font-bold text-sm sm:text-lg">Anti Bakteri (Polyester)</span>
                                     </div>
-                                    <span className="text-xs font-medium text-slate-500">Standar Kebersihan Tinggi</span>
-                                    {fabricType === "antibakteri" && <div className="absolute top-1/2 -translate-y-1/2 right-6 text-emerald-500"><CheckCircle2 className="h-6 w-6" /></div>}
+                                    <span className="text-[10px] sm:text-xs font-medium text-slate-500">Standar Kebersihan Tinggi</span>
+                                    {fabricType === "antibakteri" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
 
                                 <button
                                     onClick={() => setFabricType("antidarah")}
                                     className={cn(
-                                        "h-24 px-6 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
                                         fabricType === "antidarah"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
                                     <div className="flex items-center gap-2 text-emerald-800">
-                                        <Activity className="h-5 w-5" />
-                                        <span className="font-bold text-lg">Anti Darah (PVC)</span>
+                                        <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+                                        <span className="font-bold text-sm sm:text-lg">Anti Darah (PVC)</span>
                                     </div>
-                                    <span className="text-xs font-medium text-slate-500">Mudah Dibersihkan & Steril</span>
-                                    {fabricType === "antidarah" && <div className="absolute top-1/2 -translate-y-1/2 right-6 text-emerald-500"><CheckCircle2 className="h-6 w-6" /></div>}
+                                    <span className="text-[10px] sm:text-xs font-medium text-slate-500">Mudah Dibersihkan & Steril</span>
+                                    {fabricType === "antidarah" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
                             </div>
                         </section>
@@ -338,29 +338,29 @@ export default function HospitalCalculatorPage() {
                                 <button
                                     onClick={() => setRailType("flexy")}
                                     className={cn(
-                                        "h-24 px-6 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
                                         railType === "flexy"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
-                                    <span className={cn("font-bold text-lg", railType === "flexy" ? "text-emerald-800" : "text-slate-800")}>Rel Flexy</span>
-                                    <span className="text-xs font-medium text-slate-500">Fleksibel & Bisa Melengkung</span>
-                                    {railType === "flexy" && <div className="absolute top-1/2 -translate-y-1/2 right-6 text-emerald-500"><CheckCircle2 className="h-6 w-6" /></div>}
+                                    <span className={cn("font-bold text-base sm:text-lg", railType === "flexy" ? "text-emerald-800" : "text-slate-800")}>Rel Flexy</span>
+                                    <span className="text-[10px] sm:text-xs font-medium text-slate-500">Fleksibel & Bisa Melengkung</span>
+                                    {railType === "flexy" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
 
                                 <button
                                     onClick={() => setRailType("standar")}
                                     className={cn(
-                                        "h-24 px-6 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
                                         railType === "standar"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
-                                    <span className={cn("font-bold text-lg", railType === "standar" ? "text-emerald-800" : "text-slate-800")}>Rel Standar</span>
-                                    <span className="text-xs font-medium text-slate-500">Lurus & Kokoh</span>
-                                    {railType === "standar" && <div className="absolute top-1/2 -translate-y-1/2 right-6 text-emerald-500"><CheckCircle2 className="h-6 w-6" /></div>}
+                                    <span className={cn("font-bold text-base sm:text-lg", railType === "standar" ? "text-emerald-800" : "text-slate-800")}>Rel Standar</span>
+                                    <span className="text-[10px] sm:text-xs font-medium text-slate-500">Lurus & Kokoh</span>
+                                    {railType === "standar" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
                             </div>
                         </section>

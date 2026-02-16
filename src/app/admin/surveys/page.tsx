@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { saveCommissionTransaction, getCommissionPercentage } from "@/lib/commission";
+import { saveCommissionTransaction, getCommissionPercentage, checkAndGrantAutoBonus } from "@/lib/commission";
 import SurveyCard from "./SurveyCard";
 
 interface SurveySchedule {
@@ -180,6 +180,15 @@ export default function SurveysPage() {
             if (updateError) throw updateError;
 
             toast.success("Komisi berhasil dicairkan ke saldo mitra!");
+
+            // Auto-check bonus per 5 projek selesai & lunas
+            const bonusResult = await checkAndGrantAutoBonus(survey.partner_id);
+            if (bonusResult.granted) {
+                toast.success("🎯 Bonus Rp 300.000 otomatis masuk!", {
+                    description: `${survey.partners?.full_name} telah menyelesaikan 5 projek lunas`
+                });
+            }
+
             fetchSurveys();
         } catch (err: any) {
             console.error("Error disbursing commission:", err);

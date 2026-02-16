@@ -81,6 +81,78 @@ export async function addManualBonus(
     }
 }
 
+// Auto Bonus: check and grant Rp 300.000 per every 5 completed+paid projects
+export async function checkAndGrantAutoBonus(
+    partnerId: string
+): Promise<{ granted: boolean; error?: string }> {
+    const BONUS_TARGET = 5;
+    const BONUS_AMOUNT = 300000;
+
+    try {
+        // 1. Get all survey IDs for this partner that are 'done'
+        const { data: doneSurveys, error: surveyError } = await supabase
+            .from('survey_schedules')
+            .select('id')
+            .eq('partner_id', partnerId)
+            .eq('status', 'done');
+
+        if (surveyError) throw surveyError;
+        if (!doneSurveys || doneSurveys.length === 0) return { granted: false };
+
+        // 2. For each done survey, check if its invoice is paid
+        const surveyIds = doneSurveys.map(s => s.id);
+        const { data: paidInvoices, error: invError } = await supabase
+            .from('invoices')
+            .select('id, survey_id')
+            .in('survey_id', surveyIds)
+            .eq('payment_status', 'paid');
+
+        if (invError) throw invError;
+
+        const totalDonePaid = paidInvoices?.length || 0;
+
+        // 3. How many bonuses should have been given?
+        const expectedBonusCount = Math.floor(totalDonePaid / BONUS_TARGET);
+        if (expectedBonusCount === 0) return { granted: false };
+
+        // 4. How many bonuses have already been given?
+        const { count: givenBonusCount, error: txError } = await supabase
+            .from('transactions')
+            .select('*', { count: 'exact', head: true })
+            .eq('partner_id', partnerId)
+            .eq('type', 'commission')
+            .eq('status', 'success')
+            .like('description', 'Bonus Otomatis - 5 Projek Selesai%');
+
+        if (txError) throw txError;
+
+        const alreadyGiven = givenBonusCount || 0;
+
+        // 5. Grant bonus if needed
+        if (expectedBonusCount > alreadyGiven) {
+            const batchNumber = alreadyGiven + 1;
+            const { error: insertError } = await supabase
+                .from('transactions')
+                .insert({
+                    partner_id: partnerId,
+                    type: 'commission',
+                    amount: BONUS_AMOUNT,
+                    description: `Bonus Otomatis - 5 Projek Selesai & Lunas (Batch ke-${batchNumber})`,
+                    status: 'success',
+                });
+
+            if (insertError) throw insertError;
+
+            return { granted: true };
+        }
+
+        return { granted: false };
+    } catch (err: any) {
+        console.error('Error checking auto bonus:', err);
+        return { granted: false, error: err.message };
+    }
+}
+
 // Get all withdrawals (for admin)
 export async function getWithdrawals() {
     try {
