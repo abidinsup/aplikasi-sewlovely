@@ -383,7 +383,7 @@ export default function SpreiCalculatorPage() {
                     </div>
 
                     {/* RIGHT COLUMN - SUMMARY */}
-                    <div className="lg:col-span-4 rounded-3xl">
+                    <div className="hidden lg:block lg:col-span-4 rounded-3xl">
                         <SummaryCard />
                     </div>
                 </div>
