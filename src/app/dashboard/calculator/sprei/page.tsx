@@ -195,62 +195,91 @@ export default function SpreiCalculatorPage() {
         )}>
             {!isMobile && <h3 className="font-bold text-slate-900 text-lg mb-4">Ringkasan Minat</h3>}
 
-            <div className="space-y-4">
-                <div className="flex items-end justify-between px-2">
-                    <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estimasi Harga</p>
-                        <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
-                            Rp {totalPrice.toLocaleString("id-ID")}
-                        </h3>
+            {isMobile ? (
+                <div className="max-w-md mx-auto space-y-2">
+                    <div className="flex items-center gap-4">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Estimasi Harga</p>
+                            <h3 className="text-xl font-extrabold text-emerald-600 tracking-tight truncate">
+                                Rp {totalPrice.toLocaleString("id-ID")}
+                            </h3>
+                        </div>
+                        <Button
+                            onClick={handleRequestVisit}
+                            disabled={(!selectedSprei && !selectedBedcover) || isSubmitting}
+                            className="flex-none w-32 h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
+                        >
+                            {isSubmitting ? (
+                                <span className="animate-pulse">...</span>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Save className="h-4 w-4" />
+                                    <span>Simpan</span>
+                                </div>
+                            )}
+                        </Button>
                     </div>
-                </div>
-
-                <div className="space-y-3 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
-                    {selectedSprei ? (
-                        <div className="flex justify-between items-start pb-2 border-b border-slate-200 border-dashed">
-                            <div>
-                                <span className="font-bold text-slate-900 block">{selectedSprei.label}</span>
-                            </div>
-                            <span className="font-medium">Rp {selectedSprei.price.toLocaleString("id-ID")}</span>
-                        </div>
-                    ) : (
-                        <p className="text-xs text-slate-400 italic text-center py-2">Belum ada sprei dipilih</p>
-                    )}
-
-                    {selectedBedcover ? (
-                        <div className="flex justify-between items-start pt-1">
-                            <div>
-                                <span className="font-bold text-slate-900 block">{selectedBedcover.label}</span>
-                            </div>
-                            <span className="font-medium">Rp {selectedBedcover.price.toLocaleString("id-ID")}</span>
-                        </div>
-                    ) : (
-                        <p className="text-xs text-slate-400 italic text-center py-2">Belum ada bedcover dipilih</p>
-                    )}
-                </div>
-
-                {/* Info Text replacing Schedule Input */}
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-800 leading-relaxed">
-                    <p className="font-medium text-center">
-                        Tim kami akan membawakan katalog motif saat kunjungan survey.
+                    <p className="text-[10px] text-slate-400 text-center">
+                        Tim kami akan membawakan katalog motif saat survey.
                     </p>
                 </div>
+            ) : (
+                <div className="space-y-4">
+                    <div className="flex items-end justify-between px-2">
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estimasi Harga</p>
+                            <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+                                Rp {totalPrice.toLocaleString("id-ID")}
+                            </h3>
+                        </div>
+                    </div>
 
-                <Button
-                    onClick={handleRequestVisit}
-                    disabled={(!selectedSprei && !selectedBedcover) || isSubmitting}
-                    className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:shadow-none"
-                >
-                    {isSubmitting ? (
-                        <span className="animate-pulse">Menyimpan...</span>
-                    ) : (
-                        <>
-                            <Save className="h-5 w-5" />
-                            Simpan
-                        </>
-                    )}
-                </Button>
-            </div>
+                    <div className="space-y-3 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
+                        {selectedSprei ? (
+                            <div className="flex justify-between items-start pb-2 border-b border-slate-200 border-dashed">
+                                <div>
+                                    <span className="font-bold text-slate-900 block">{selectedSprei.label}</span>
+                                </div>
+                                <span className="font-medium">Rp {selectedSprei.price.toLocaleString("id-ID")}</span>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-slate-400 italic text-center py-2">Belum ada sprei dipilih</p>
+                        )}
+
+                        {selectedBedcover ? (
+                            <div className="flex justify-between items-start pt-1">
+                                <div>
+                                    <span className="font-bold text-slate-900 block">{selectedBedcover.label}</span>
+                                </div>
+                                <span className="font-medium">Rp {selectedBedcover.price.toLocaleString("id-ID")}</span>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-slate-400 italic text-center py-2">Belum ada bedcover dipilih</p>
+                        )}
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-800 leading-relaxed">
+                        <p className="font-medium text-center">
+                            Tim kami akan membawakan katalog motif saat kunjungan survey.
+                        </p>
+                    </div>
+
+                    <Button
+                        onClick={handleRequestVisit}
+                        disabled={(!selectedSprei && !selectedBedcover) || isSubmitting}
+                        className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:shadow-none"
+                    >
+                        {isSubmitting ? (
+                            <span className="animate-pulse">Menyimpan...</span>
+                        ) : (
+                            <>
+                                <Save className="h-5 w-5" />
+                                Simpan
+                            </>
+                        )}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 
