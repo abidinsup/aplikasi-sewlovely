@@ -515,10 +515,7 @@ export default function CurtainCalculatorPage() {
                 </div>
             </main>
 
-            {/* Bottom Sheet Calculator (Mobile Only) */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 pb-8 rounded-t-[2rem] shadow-[0_-8px_30px_rgba(0,0,0,0.05)] z-30 lg:hidden">
-                <SummaryCard isMobile={true} />
-            </div>
+
         </div>
     );
 }
