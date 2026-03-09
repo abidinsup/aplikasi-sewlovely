@@ -26,13 +26,7 @@ const LoginSuccessModal: React.FC<LoginSuccessModalProps> = ({
         if (isOpen) {
             setProgress(0);
             const timer = setInterval(() => {
-                setProgress((prev) => {
-                    if (prev >= 100) {
-                        clearInterval(timer);
-                        return 100;
-                    }
-                    return prev + 1;
-                });
+                setProgress((prev) => (prev >= 100 ? 100 : prev + 1));
             }, 20);
 
             const closeTimer = setTimeout(() => {
@@ -46,137 +40,174 @@ const LoginSuccessModal: React.FC<LoginSuccessModalProps> = ({
         }
     }, [isOpen, onClose]);
 
+    if (!mounted) return null;
+
     const getRoleIcon = () => {
         switch (role) {
-            case "Owner":
-                return <Crown className="w-10 h-10 text-purple-500" />;
-            case "Admin":
-                return <ShieldCheck className="w-10 h-10 text-purple-500" />;
-            default:
-                return <UserCircle2 className="w-10 h-10 text-purple-500" />;
+            case "Owner": return <Crown className="w-10 h-10 text-purple-500" />;
+            case "Admin": return <ShieldCheck className="w-10 h-10 text-purple-500" />;
+            default: return <UserCircle2 className="w-10 h-10 text-purple-500" />;
         }
     };
 
     const getRoleLabel = () => {
         switch (role) {
-            case "Owner":
-                return "OWNER / SUPER ADMIN";
-            case "Admin":
-                return "ADMINISTRATOR SYSTEM";
-            default:
-                return "MITRA AFFILIATE RESMI";
+            case "Owner": return "OWNER / SUPER ADMIN";
+            case "Admin": return "ADMINISTRATOR SYSTEM";
+            default: return "MITRA AFFILIATE RESMI";
         }
     };
 
-    if (!mounted) return null;
-
-    const modalContent = (
+    const modalLayout = (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden">
-                    {/* Backdrop with Heavy Blur & Darkness */}
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        zIndex: 999999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        pointerEvents: 'auto'
+                    }}
+                >
+                    {/* Final Defense Backdrop: Hard-coded Dark Blurred Background */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                            backdropFilter: 'blur(40px)',
+                            WebkitBackdropFilter: 'blur(40px)',
+                            zIndex: -1
+                        }}
                     />
 
-                    {/* Modal Content - Center Focused */}
+                    {/* Highly Centered Content Card */}
                     <motion.div
-                        initial={{ scale: 0.8, opacity: 0, y: 40 }}
+                        initial={{ scale: 0.85, opacity: 0, y: 30 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="relative w-full max-w-sm overflow-hidden rounded-[3rem] bg-white p-10 text-center shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-white/20"
+                        exit={{ scale: 0.9, opacity: 0, y: 15 }}
+                        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                        style={{
+                            position: 'relative',
+                            width: '90%',
+                            maxWidth: '400px',
+                            backgroundColor: 'white',
+                            borderRadius: '3.5rem',
+                            padding: '3rem 2rem',
+                            textAlign: 'center',
+                            boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                        }}
                     >
-                        <div className="relative z-10 flex flex-col items-center">
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-                            {/* Icon Container */}
-                            <div className="relative mb-8">
+                            {/* Icon Section */}
+                            <div style={{ position: 'relative', marginBottom: '2.5rem' }}>
                                 <motion.div
-                                    initial={{ rotate: -10, scale: 0.5 }}
+                                    initial={{ rotate: -15, scale: 0.7 }}
                                     animate={{ rotate: 0, scale: 1 }}
-                                    transition={{ type: "spring", delay: 0.1 }}
-                                    className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-[0_8px_16px_-4px_rgba(168,85,247,0.1)] border border-purple-50"
+                                    transition={{ type: "spring", delay: 0.1, damping: 15 }}
+                                    style={{
+                                        display: 'flex',
+                                        height: '7rem',
+                                        width: '7rem',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '2.5rem',
+                                        backgroundColor: 'white',
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
+                                        border: '1px solid #f3e8ff'
+                                    }}
                                 >
                                     {getRoleIcon()}
                                 </motion.div>
-
-                                {/* Overlaid Check Icon */}
                                 <motion.div
                                     initial={{ scale: 0, x: 10, y: 10 }}
                                     animate={{ scale: 1, x: 0, y: 0 }}
                                     transition={{ delay: 0.4, type: "spring" }}
-                                    className="absolute -right-3 -bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#10b981] text-white shadow-lg border-4 border-white"
+                                    style={{
+                                        position: 'absolute',
+                                        right: '-0.5rem',
+                                        bottom: '-0.5rem',
+                                        display: 'flex',
+                                        height: '2.75rem',
+                                        width: '2.75rem',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '9999px',
+                                        backgroundColor: '#10b981',
+                                        color: 'white',
+                                        boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                        border: '4px solid white'
+                                    }}
                                 >
-                                    <CheckCircle2 className="w-6 h-6 fill-white text-[#10b981]" />
+                                    <CheckCircle2 style={{ width: '1.5rem', height: '1.5rem' }} />
                                 </motion.div>
                             </div>
 
-                            {/* Text Elements */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="space-y-1 mb-8"
-                            >
-                                <h2 className="text-[32px] font-black text-[#1e293b] leading-tight mb-2">
+                            {/* Text Section */}
+                            <div style={{ marginBottom: '2rem' }}>
+                                <h2 style={{ fontSize: '2.1rem', fontWeight: 900, color: '#1e293b', lineHeight: 1.1, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
                                     Berhasil Masuk!
                                 </h2>
-                                <p className="text-[#64748b] text-xl font-medium">
+                                <p style={{ fontSize: '1.25rem', fontWeight: 500, color: '#64748b' }}>
                                     Selamat datang kembali,
                                 </p>
-                            </motion.div>
+                            </div>
 
-                            {/* User Name Badge */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.5 }}
-                                className="w-full py-4 px-6 rounded-[2rem] bg-[#f5f3ff] mb-6"
-                            >
-                                <span className="text-[#7c3aed] text-2xl font-black uppercase tracking-wide">
+                            {/* Name Badge */}
+                            <div style={{
+                                width: '100%',
+                                padding: '1.25rem',
+                                borderRadius: '2.5rem',
+                                backgroundColor: '#f5f3ff',
+                                marginBottom: '1.5rem',
+                                border: '1px solid #ddd6fe'
+                            }}>
+                                <span style={{ fontSize: '1.6rem', fontWeight: 900, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     {userName}
                                 </span>
-                            </motion.div>
+                            </div>
 
                             {/* Role Label */}
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.6 }}
-                                className="text-[#94a3b8] text-[11px] font-bold tracking-[0.25em] mb-10"
-                            >
+                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.3em', marginBottom: '2.5rem', textTransform: 'uppercase' }}>
                                 {getRoleLabel()}
-                            </motion.p>
+                            </p>
 
-                            {/* Gradient Progress Bar */}
-                            <div className="w-full h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden mb-3">
+                            {/* Progress Bar Container */}
+                            <div style={{ width: '100%', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '9999px', overflow: 'hidden', marginBottom: '1rem' }}>
                                 <motion.div
-                                    className="h-full bg-gradient-to-r from-[#6366f1] to-[#a855f7]"
+                                    style={{ height: '100%', background: 'linear-gradient(90deg, #6366f1, #a855f7, #d946ef)' }}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ ease: "linear" }}
                                 />
                             </div>
 
-                            <p className="text-[#94a3b8] text-xs font-medium italic">
+                            <p style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', fontWeight: 500 }}>
                                 Sedang mengalihkan ke dashboard...
                             </p>
                         </div>
-
-                        {/* Subtle background glow */}
-                        <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-100/30 rounded-full blur-3xl -z-10" />
-                        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-100/30 rounded-full blur-3xl -z-10" />
                     </motion.div>
                 </div>
             )}
         </AnimatePresence>
     );
 
-    return createPortal(modalContent, document.body);
+    if (typeof document === 'undefined') return null;
+    return createPortal(modalLayout, document.body);
 };
 
 export default LoginSuccessModal;
-
