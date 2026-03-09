@@ -23,8 +23,19 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         phone: survey.customer_phone || "",
         address: survey.customer_address || ""
     });
+
+    // Current input state
     const [windows, setWindows] = React.useState([{ id: 1, width: "", height: "" }]);
     const [blindType, setBlindType] = React.useState<"vertical" | "roller" | "venetian">("roller");
+
+    // NEW Product Selection States
+    const [selectedProductId, setSelectedProductId] = React.useState<string>("custom");
+    const [manualProductName, setManualProductName] = React.useState("");
+    const [manualPrice, setManualPrice] = React.useState<string>("");
+
+    // Saved items (the "Basket")
+    const [savedItems, setSavedItems] = React.useState<any[]>([]);
+
     const [surveyDate] = React.useState<string | null>(survey.survey_date);
     const [surveyTime] = React.useState<string | null>(survey.survey_time);
     const [totalPrice, setTotalPrice] = React.useState(0);
@@ -39,7 +50,12 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         const fetchPrices = async () => {
             const result = await getProducts();
             if (result.success && result.data) {
-                setPrices(result.data);
+                // Filter only Kantor products or generic ones
+                const officeProducts = result.data.filter(p =>
+                    p.category.toLowerCase() === 'kantor' ||
+                    p.name.toLowerCase().includes('blind')
+                );
+                setPrices(officeProducts);
             }
         };
         fetchPrices();
@@ -60,37 +76,111 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         setWindows(windows.map(w => w.id === id ? { ...w, [field]: value } : w));
     };
 
+    const handleProductChange = (val: string) => {
+        setSelectedProductId(val);
+        if (val === "custom") {
+            setManualProductName("");
+            setManualPrice("");
+        } else {
+            const product = prices.find(p => p.id.toString() === val);
+            if (product) {
+                setManualProductName(product.name);
+                setManualPrice(product.price.toString());
+            }
+        }
+    };
+
+    const addItemToList = () => {
+        // Validation for current input
+        const areWindowsComplete = windows.every(w => w.width && w.height);
+        if (!areWindowsComplete) {
+            toast.warning("Lengkapi ukuran jendela dahulu");
+            return;
+        }
+
+        if (!manualProductName) {
+            toast.warning("Masukkan Nama Produk / Tipe Blind");
+            return;
+        }
+
+        const priceToUse = parseFloat(manualPrice) || 0;
+        if (priceToUse <= 0) {
+            toast.warning("Masukkan harga satuan yang valid");
+            return;
+        }
+
+        const itemCalculatedPrice = windows.reduce((acc, curr) => {
+            const w_cm = Number(curr.width) || 0;
+            const h_cm = Number(curr.height) || 0;
+            const area = (Math.max(1, w_cm / 100)) * (Math.max(1, h_cm / 100));
+            return acc + (area * priceToUse);
+        }, 0);
+
+        const newItem = {
+            id: Date.now().toString(),
+            productName: manualProductName,
+            blindType: blindType, // Still keep for metadata
+            windows: [...windows],
+            unitPrice: priceToUse,
+            itemTotalPrice: itemCalculatedPrice
+        };
+
+        setSavedItems([...savedItems, newItem]);
+
+        // Reset inputs
+        setWindows([{ id: Date.now(), width: "", height: "" }]);
+        setManualProductName("");
+        setManualPrice("");
+        setSelectedProductId("custom");
+        toast.success(`Berhasil menambah ${manualProductName} ke daftar`);
+    };
+
+    const removeItemFromList = (id: string) => {
+        setSavedItems(savedItems.filter(item => item.id !== id));
+    };
+
     const handleCreateInvoice = async () => {
         // Validation
         const isCustomerInfoComplete = customerInfo.name && customerInfo.phone && customerInfo.address;
-        const areWindowsComplete = windows.every(w => w.width && w.height);
 
-        if (!isCustomerInfoComplete || !areWindowsComplete) {
-            toast.warning("Mohon semua data dilengkapi");
+        if (!isCustomerInfoComplete) {
+            toast.warning("Mohon lengkapi data pemesan");
             return;
         }
 
-        // Validate no zero values
-        const hasZeroValues = windows.some(w => parseFloat(w.width) <= 0 || parseFloat(w.height) <= 0);
-        if (hasZeroValues) {
-            toast.error("Lebar dan tinggi jendela harus lebih dari 0");
-            return;
+        let finalItems = [...savedItems];
+        const areCurrentWindowsComplete = windows.some(w => w.width && w.height);
+
+        // If there's pending input not yet added to list, process it
+        if (areCurrentWindowsComplete && windows.every(w => w.width && w.height) && manualProductName && parseFloat(manualPrice) > 0) {
+            const priceToUse = parseFloat(manualPrice);
+            const itemCalculatedPrice = windows.reduce((acc, curr) => {
+                const w_cm = Number(curr.width) || 0;
+                const h_cm = Number(curr.height) || 0;
+                const area = (Math.max(1, w_cm / 100)) * (Math.max(1, h_cm / 100));
+                return acc + (area * priceToUse);
+            }, 0);
+
+            finalItems.push({
+                id: "current-" + Date.now(),
+                productName: manualProductName,
+                blindType: blindType,
+                windows: [...windows],
+                unitPrice: priceToUse,
+                itemTotalPrice: itemCalculatedPrice
+            });
         }
 
-        // Validate total price is not zero
-        if (totalPrice <= 0) {
-            toast.error("Total harga tidak boleh Rp 0. Pastikan ukuran jendela sudah benar.");
+        if (finalItems.length === 0) {
+            toast.warning("Daftar pesanan masih kosong. Gunakan tombol 'Simpan ke Daftar'.");
             return;
         }
 
         // Admin creates invoices directly
-
         const orderData = {
             customerInfo,
-            windows,
-            blindType,
-            totalPrice,
-            unitPrice,
+            savedItems: finalItems,
+            totalPrice: finalItems.reduce((acc, item) => acc + item.itemTotalPrice, 0),
             surveyDate,
             surveyTime,
             partner_id: survey.partner_id,
@@ -100,44 +190,28 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
             survey_id: survey.id,
         };
         const encodedData = btoa(JSON.stringify(orderData));
-        // Push WITHOUT &mode=simulasi so it saves to DB
         router.push(`/admin/calculator/kantor/invoice?data=${encodedData}`);
     };
 
-    // Calculation Logic
+    // Calculation Logic for UI progress only
     React.useEffect(() => {
-        if (prices.length === 0) return;
+        // Sum of saved items
+        const savedTotal = savedItems.reduce((acc, item) => acc + item.itemTotalPrice, 0);
 
-        const packageRoller = prices.find(p => p.name.toUpperCase().includes("ROLLER BLIND"))?.price || 0;
-        const packageVertical = prices.find(p => p.name.toUpperCase().includes("VERTICAL BLIND"))?.price || 0;
-        const packageVenetian = prices.find(p => p.name.toUpperCase().includes("VENETIAN BLIND"))?.price || 0;
-
-        let basePackagePrice = packageRoller;
-        if (blindType === "vertical") basePackagePrice = packageVertical;
-        if (blindType === "roller") basePackagePrice = packageRoller;
-        if (blindType === "venetian") basePackagePrice = packageVenetian;
-
-        setUnitPrice(basePackagePrice);
-
-        const totalCalculated = windows.reduce((acc, curr) => {
+        // Current progress
+        const currentPrice = parseFloat(manualPrice) || 0;
+        const currentProgressTotal = windows.reduce((acc, curr) => {
             const w_cm = Number(curr.width) || 0;
             const h_cm = Number(curr.height) || 0;
             if (w_cm > 0 && h_cm > 0) {
-                // Konversi ke Meter untuk hitungan harga per m2
-                const w_m = w_cm / 100;
-                const h_m = h_cm / 100;
-
-                // Jika lebar atau tinggi < 1m -> dihitung 1m. Volume = lebar hitung x tinggi hitung
-                const wCalculated = Math.max(1, w_m);
-                const hCalculated = Math.max(1, h_m);
-                const area = wCalculated * hCalculated;
-                return acc + (area * basePackagePrice);
+                const area = (Math.max(1, w_cm / 100)) * (Math.max(1, h_cm / 100));
+                return acc + (area * currentPrice);
             }
             return acc;
         }, 0);
 
-        setTotalPrice(totalCalculated);
-    }, [windows, blindType, prices]);
+        setTotalPrice(savedTotal + currentProgressTotal);
+    }, [windows, manualPrice, savedItems]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -149,28 +223,62 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
             <div className="space-y-4">
                 <div className="flex items-end justify-between px-2">
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estimasi Total</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Estimasi</p>
                         <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
                             Rp {totalPrice.toLocaleString("id-ID")}
                         </h3>
                     </div>
                 </div>
 
-                <div className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
+                <div className="space-y-3 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block overflow-hidden">
+                    {savedItems.length > 0 && (
+                        <div className="space-y-3 mb-3 border-b border-slate-200 pb-3">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daftar Item</p>
+                            {savedItems.map((item, idx) => (
+                                <div key={item.id} className="flex justify-between items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
+                                    <div className="flex-1">
+                                        <p className="font-bold text-[11px] text-slate-800 capitalize leading-tight">{item.productName}</p>
+                                        <p className="text-[10px] text-slate-400">{item.windows.length} Jendela @ Rp {item.unitPrice.toLocaleString()}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-bold text-[11px] text-emerald-600">Rp {item.itemTotalPrice.toLocaleString("id-ID")}</p>
+                                        <button
+                                            onClick={() => removeItemFromList(item.id)}
+                                            className="text-[10px] text-red-400 hover:text-red-500 font-medium"
+                                        >
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="flex justify-between">
-                        <span>Jendela</span>
-                        <span className="font-bold">{windows.length} Set</span>
+                        <span>Input Saat Ini</span>
+                        <span className="font-bold">{windows.filter(w => w.width && w.height).length} Jendela</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Jenis Paket</span>
-                        <span className="font-bold capitalize">{blindType} Blind</span>
+                        <span>Jenis Blind</span>
+                        <span className="font-bold capitalize">{blindType}</span>
                     </div>
                 </div>
 
-                <Button onClick={handleCreateInvoice} className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
-                    <Printer className="h-5 w-5" />
-                    Buat Invoice
-                </Button>
+                <div className="flex flex-col gap-2">
+                    <Button
+                        onClick={addItemToList}
+                        variant="outline"
+                        className="w-full h-12 border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold flex items-center justify-center gap-2 border-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Simpan ke Daftar
+                    </Button>
+
+                    <Button onClick={handleCreateInvoice} className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
+                        <Printer className="h-5 w-5" />
+                        Buat Invoice
+                    </Button>
+                </div>
 
                 <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
                     *Harga sudah termasuk pemasangan
@@ -189,7 +297,6 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* LEFT COLUMN - FORM INPUTS */}
                 <div className="lg:col-span-8 space-y-8">
                     {/* 0. Data Pemesan */}
                     <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
@@ -210,7 +317,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">No. WhatsApp</label>
                                 <Input
-                                    placeholder="085159588681"
+                                    placeholder="085159..."
                                     className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300"
                                     value={customerInfo.phone}
                                     onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
@@ -219,7 +326,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                             <div className="space-y-2 md:col-span-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Alamat Pemasangan</label>
                                 <Input
-                                    placeholder="Jl. Kantor No. 88, Jakarta Pusat"
+                                    placeholder="Alamat Kantor"
                                     className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300"
                                     value={customerInfo.address}
                                     onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
@@ -228,14 +335,81 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                         </div>
                     </section>
 
-                    {/* 1. Ukuran Jendela */}
+                    {/* 1. Pilih Produk & Harga */}
+                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                            <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
+                            <h2 className="font-bold text-slate-900 text-lg">Pilihan Produk & Harga</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Cari dari Katalog</label>
+                                <select
+                                    className="w-full h-12 bg-slate-50 border-slate-200 rounded-xl px-4 text-sm focus:ring-emerald-500 focus:border-emerald-500"
+                                    value={selectedProductId}
+                                    onChange={(e) => handleProductChange(e.target.value)}
+                                >
+                                    <option value="custom">-- Input Manual / Harga Custom --</option>
+                                    {prices.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name} (Rp {p.price.toLocaleString()})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tipe / Kategori</label>
+                                <div className="flex gap-2">
+                                    {(['roller', 'vertical', 'venetian'] as const).map(type => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setBlindType(type)}
+                                            className={cn(
+                                                "flex-1 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all",
+                                                blindType === type ? "bg-emerald-600 text-white shadow-md shadow-emerald-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                            )}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Nama Produk (Muncul di Invoice)</label>
+                                <Input
+                                    placeholder="Contoh: Roller Blind Blackout Seri SP.20"
+                                    className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl"
+                                    value={manualProductName}
+                                    onChange={(e) => setManualProductName(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Harga Jual per m² (Rp)</label>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        placeholder="0"
+                                        className="h-12 bg-slate-100 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold pr-16"
+                                        value={manualPrice}
+                                        onChange={(e) => setManualPrice(e.target.value)}
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ m²</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 italic pl-1">*Hapus dan ketik untuk harga custom</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 2. Ukuran Jendela */}
                     <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><Grid className="h-5 w-5" /></div>
                                 <h2 className="font-bold text-slate-900 text-base sm:text-lg">Ukuran Jendela</h2>
                             </div>
-                            <Button onClick={addWindow} size="sm" variant="outline" className="text-[11px] sm:text-xs h-7 sm:h-8 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800">
+                            <Button onClick={addWindow} size="sm" variant="outline" className="text-[11px] h-8 gap-1 border-emerald-200 hover:bg-emerald-50">
                                 <Plus className="h-3 w-3" /> Tambah Jendela
                             </Button>
                         </div>
@@ -258,7 +432,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                                 <Input
                                                     type="number"
                                                     placeholder="100"
-                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
+                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none"
                                                     value={window.width}
                                                     onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
                                                 />
@@ -271,7 +445,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                                 <Input
                                                     type="number"
                                                     placeholder="150"
-                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
+                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none"
                                                     value={window.height}
                                                     onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
                                                 />
@@ -284,57 +458,6 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                         </div>
                     </section>
 
-                    {/* 2. Pilihan Blind */}
-                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                            <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
-                            <h2 className="font-bold text-slate-900 text-lg">Pilihan Blind</h2>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <button
-                                onClick={() => setBlindType("roller")}
-                                className={cn(
-                                    "h-auto min-h-[4rem] sm:h-32 px-4 sm:px-4 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start sm:items-center justify-center gap-1 sm:gap-2 transition-all duration-300 text-left sm:text-center relative overflow-hidden",
-                                    blindType === "roller"
-                                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                        : "bg-white border-slate-100 hover:bg-slate-50"
-                                )}
-                            >
-                                <span className={cn("font-bold text-base sm:text-lg", blindType === "roller" ? "text-emerald-800" : "text-slate-800")}>Roller Blind</span>
-                                <span className="text-[10px] sm:text-xs font-medium text-slate-500">Minimalis & Modern</span>
-                                {blindType === "roller" && <div className="absolute top-1/2 -translate-y-1/2 sm:top-2 sm:translate-y-0 right-3 sm:right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
-                            </button>
-
-                            <button
-                                onClick={() => setBlindType("vertical")}
-                                className={cn(
-                                    "h-auto min-h-[4rem] sm:h-32 px-4 sm:px-4 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start sm:items-center justify-center gap-1 sm:gap-2 transition-all duration-300 text-left sm:text-center relative overflow-hidden",
-                                    blindType === "vertical"
-                                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                        : "bg-white border-slate-100 hover:bg-slate-50"
-                                )}
-                            >
-                                <span className={cn("font-bold text-base sm:text-lg", blindType === "vertical" ? "text-emerald-800" : "text-slate-800")}>Vertical Blind</span>
-                                <span className="text-[10px] sm:text-xs font-medium text-slate-500">Untuk Jendela Tinggi</span>
-                                {blindType === "vertical" && <div className="absolute top-1/2 -translate-y-1/2 sm:top-2 sm:translate-y-0 right-3 sm:right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
-                            </button>
-
-                            <button
-                                onClick={() => setBlindType("venetian")}
-                                className={cn(
-                                    "h-auto min-h-[4rem] sm:h-32 px-4 sm:px-4 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start sm:items-center justify-center gap-1 sm:gap-2 transition-all duration-300 text-left sm:text-center relative overflow-hidden",
-                                    blindType === "venetian"
-                                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                        : "bg-white border-slate-100 hover:bg-slate-50"
-                                )}
-                            >
-                                <span className={cn("font-bold text-base sm:text-lg", blindType === "venetian" ? "text-emerald-800" : "text-slate-800")}>Venetian Blind</span>
-                                <span className="text-[10px] sm:text-xs font-medium text-slate-500">Klasik Aluminium</span>
-                                {blindType === "venetian" && <div className="absolute top-1/2 -translate-y-1/2 sm:top-2 sm:translate-y-0 right-3 sm:right-2 text-emerald-500"><CheckCircle2 className="h-5 w-5" /></div>}
-                            </button>
-                        </div>
-                    </section>
-
                     {/* 3. Upload Foto */}
                     <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
@@ -342,7 +465,6 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                             <h2 className="font-bold text-slate-900 text-lg">Hasil Survey & Foto</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Upload Kode Gorden - Renamed for Kantor */}
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Kode Blind / Katalog</label>
                                 {kodeGordenPreview ? (
@@ -358,11 +480,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                                         reader.readAsDataURL(file);
                                                     }
                                                 }} />
-                                                Ganti Foto
+                                                Ganti
                                             </label>
-                                            <button onClick={() => setKodeGordenPreview(null)} className="bg-red-500/80 backdrop-blur px-3 py-1.5 rounded-lg text-white text-xs font-medium hover:bg-red-600 transition-colors">
-                                                Hapus
-                                            </button>
+                                            <button onClick={() => setKodeGordenPreview(null)} className="bg-red-500/80 backdrop-blur px-3 py-1.5 rounded-lg text-white text-xs font-medium">Hapus</button>
                                         </div>
                                     </div>
                                 ) : (
@@ -383,7 +503,6 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                 )}
                             </div>
 
-                            {/* Upload Motif Gorden - Renamed for Kantor */}
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Warna / Motif Blind</label>
                                 {motifGordenPreview ? (
@@ -399,11 +518,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                                         reader.readAsDataURL(file);
                                                     }
                                                 }} />
-                                                Ganti Foto
+                                                Ganti
                                             </label>
-                                            <button onClick={() => setMotifGordenPreview(null)} className="bg-red-500/80 backdrop-blur px-3 py-1.5 rounded-lg text-white text-xs font-medium hover:bg-red-600 transition-colors">
-                                                Hapus
-                                            </button>
+                                            <button onClick={() => setMotifGordenPreview(null)} className="bg-red-500/80 backdrop-blur px-3 py-1.5 rounded-lg text-white text-xs font-medium">Hapus</button>
                                         </div>
                                     </div>
                                 ) : (
@@ -432,8 +549,6 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                     <SummaryCard />
                 </div>
             </div>
-
-
         </div>
     );
 }

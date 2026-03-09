@@ -99,8 +99,6 @@ function InvoiceContent() {
 
         setIsSaving(true);
         try {
-            // Admin creates invoices without partner association
-
             const invoiceData = {
                 invoice_number: invoiceNumber,
                 partner_id: data.partner_id || null,
@@ -110,11 +108,9 @@ function InvoiceContent() {
                 invoice_type: 'kantor',
                 total_amount: data.totalPrice,
                 payment_status: 'pending',
-                survey_id: data.survey_id || null, // Add survey_id
+                survey_id: data.survey_id || null,
                 details: {
-                    blindType: data.blindType,
-                    windows: data.windows,
-                    unitPrice: data.unitPrice,
+                    savedItems: data.savedItems || [], // Now multiple groups
                     affiliateCode: data.affiliateCode,
                     kodeGordenPhoto: data.kodeGordenPhoto,
                     motifGordenPhoto: data.motifGordenPhoto,
@@ -163,6 +159,14 @@ function InvoiceContent() {
         month: 'long',
         day: 'numeric'
     });
+
+    // Helper to get items for rendering (handle both old and new format)
+    const renderItems = data.savedItems || (data.windows ? [{
+        blindType: data.blindType,
+        windows: data.windows,
+        unitPrice: data.unitPrice,
+        itemTotalPrice: data.totalPrice
+    }] : []);
 
     return (
         <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:bg-white print:p-0 print:m-0">
@@ -243,35 +247,39 @@ function InvoiceContent() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {data.windows.map((w: any, idx: number) => {
-                                const width_cm = Number(w.width) || 0;
-                                const height_cm = Number(w.height) || 0;
-                                // Konversi ke Meter untuk hitungan m2
-                                const width_m = width_cm / 100;
-                                const height_m = height_cm / 100;
-                                // Jika lebar atau tinggi < 1m -> dihitung 1m. Volume = lebar hitung x tinggi hitung
-                                const wCalculated_m = Math.max(1, width_m);
-                                const hCalculated_m = Math.max(1, height_m);
-                                const area = wCalculated_m * hCalculated_m;
+                            {renderItems.map((group: any, groupIdx: number) => (
+                                <React.Fragment key={groupIdx}>
+                                    {group.windows.map((w: any, windowIdx: number) => {
+                                        const width_cm = Number(w.width) || 0;
+                                        const height_cm = Number(w.height) || 0;
+                                        const area = (Math.max(1, width_cm / 100)) * (Math.max(1, height_cm / 100));
 
-                                return (
-                                    <tr key={idx}>
-                                        <td className="py-4 text-sm font-medium text-slate-400">{idx + 1}</td>
-                                        <td className="py-4">
-                                            <p className="font-bold text-slate-900">Paket {data.blindType.replace('-', ' ').toUpperCase()} BLIND (Jendela {idx + 1})</p>
-                                            <div className="text-xs text-slate-500 mt-1 space-y-0.5">
-                                                <p>Kategori: <span className="capitalize font-semibold">Office Blind (Paket Pasang)</span></p>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                            {w.width}cm x {w.height}cm
-                                        </td>
-                                        <td className="py-4 text-sm text-right font-bold text-slate-900">
-                                            Rp {(area * (data.unitPrice || 0)).toLocaleString("id-ID")}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                        return (
+                                            <tr key={`${groupIdx}-${windowIdx}`}>
+                                                <td className="py-4 text-sm font-medium text-slate-400">
+                                                    {windowIdx === 0 ? groupIdx + 1 : ""}
+                                                </td>
+                                                <td className="py-4">
+                                                    <p className="font-bold text-slate-900">
+                                                        {group.productName || `Paket ${group.blindType.replace('-', ' ').toUpperCase()} BLIND`} (Jd. {windowIdx + 1})
+                                                    </p>
+                                                    {windowIdx === 0 && (
+                                                        <div className="text-[10px] text-slate-500 mt-1">
+                                                            Kategori: <span className="font-semibold italic">Office Blind</span>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="py-4 text-sm text-center font-medium text-slate-700">
+                                                    {w.width}cm x {w.height}cm
+                                                </td>
+                                                <td className="py-4 text-sm text-right font-bold text-slate-900">
+                                                    Rp {(area * (group.unitPrice || 0)).toLocaleString("id-ID")}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
                         </tbody>
                     </table>
                 </div>

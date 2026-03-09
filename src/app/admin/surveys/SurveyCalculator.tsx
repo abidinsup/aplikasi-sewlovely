@@ -109,7 +109,7 @@ export default function SurveyCalculator({ survey }: SurveyCalculatorProps) {
 
                                 <div className="flex items-center gap-2">
                                     <Link
-                                        href={`/admin/calculator/gorden/invoice?id=${inv.id}`}
+                                        href={`/admin/calculator/${inv.invoice_type || 'gorden'}/invoice?id=${inv.id}`}
                                         target="_blank"
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-colors"
                                     >
