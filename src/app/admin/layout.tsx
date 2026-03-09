@@ -12,6 +12,7 @@ import { useAppSettings } from "@/providers/AppSettingsProvider";
 import { supabase } from "@/lib/supabase";
 
 import { isAdmin, logout } from "@/lib/auth";
+import { useSessionTimeout } from "@/providers/SessionTimeoutProvider";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -30,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const isLoginPage = pathname === "/admin/login";
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
     const { appName, isMounted } = useAppSettings();
+    const { triggerLogout } = useSessionTimeout();
 
     // Detailed Counts for Sidebar Badges
     const [counts, setCounts] = React.useState({
@@ -193,10 +195,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => {
-                                                logout();
-                                                router.replace("/login");
-                                            }} className="bg-red-500 hover:bg-red-600">
+                                            <AlertDialogAction onClick={triggerLogout} className="bg-red-500 hover:bg-red-600">
                                                 Keluar
                                             </AlertDialogAction>
                                         </AlertDialogFooter>

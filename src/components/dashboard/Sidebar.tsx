@@ -33,6 +33,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { logout } from "@/lib/auth";
+import { useSessionTimeout } from "@/providers/SessionTimeoutProvider";
 
 const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -52,6 +53,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const { appName, isMounted } = useAppSettings();
     const [partner, setPartner] = React.useState<Partner | null>(null);
     const [pendingCount, setPendingCount] = React.useState(0);
+    const { triggerLogout } = useSessionTimeout();
 
     React.useEffect(() => {
         const currentPartner = getCurrentPartner();
@@ -169,10 +171,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => {
-                                    logout();
-                                    window.location.href = '/login';
-                                }} className="bg-red-500 hover:bg-red-600">
+                                <AlertDialogAction onClick={triggerLogout} className="bg-red-500 hover:bg-red-600">
                                     Keluar
                                 </AlertDialogAction>
                             </AlertDialogFooter>
