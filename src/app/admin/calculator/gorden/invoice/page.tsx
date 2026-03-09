@@ -264,22 +264,25 @@ function InvoiceContent() {
                             {data.windows?.map((w: any, idx: number) => {
                                 const rawW = Number(w.width) || 0;
                                 const rawH = Number(w.height) || 0;
-                                const widthM = Math.max(100, rawW) / 100;
-                                const heightM = rawH / 100;
+
+                                // Calc logic from calculator page
+                                let itemPrice = 0;
+                                let dimensionLabel = "";
+
+                                if (data.calcMode === "pipe_only") {
+                                    const length = Math.max(1, rawW);
+                                    itemPrice = length * (data.unitPrice || 0);
+                                    dimensionLabel = `${rawW}m`;
+                                } else {
+                                    const area = Math.max(1, rawW * rawH);
+                                    itemPrice = area * (data.unitPrice || 0);
+                                    dimensionLabel = `${rawW}m x ${rawH}m`;
+                                }
 
                                 let itemLabel = "Gorden Rumah";
-                                if (data.calcMode === "paket") itemLabel = "Paket Gorden + Pipa";
-                                else if (data.calcMode === "gorden") itemLabel = "Gorden Saja";
-                                else if (data.calcMode === "pipa") itemLabel = "Pipa Gorden Saja";
-
-                                let itemPrice = 0;
-                                if (data.calcMode === "paket") {
-                                    itemPrice = (widthM * heightM * (data.unitPrice || 0)) + (widthM * (data.pipaPrice || 0));
-                                } else if (data.calcMode === "gorden") {
-                                    itemPrice = (widthM * heightM * (data.unitPrice || 0));
-                                } else if (data.calcMode === "pipa") {
-                                    itemPrice = (widthM * (data.pipaPrice || 0));
-                                }
+                                if (data.calcMode === "package") itemLabel = "Paket Gorden + Pipa";
+                                else if (data.calcMode === "gorden_only") itemLabel = "Gorden Saja";
+                                else if (data.calcMode === "pipe_only") itemLabel = "Pipa Gorden Saja";
 
                                 return (
                                     <tr key={idx}>
@@ -287,19 +290,19 @@ function InvoiceContent() {
                                         <td className="py-4">
                                             <p className="font-bold text-slate-900">{itemLabel} (Jendela {idx + 1})</p>
                                             <div className="text-xs text-slate-500 mt-1 space-y-0.5">
-                                                {data.calcMode !== "pipa" && (
+                                                {data.calcMode !== "pipe_only" && (
                                                     <>
                                                         <p>Kain: <span className="capitalize">{data.fabric}</span> {data.motifCode && `(${data.motifCode})`}</p>
                                                         <p>Model: <span className="capitalize">{data.model}</span> (Sudah termasuk aksesoris)</p>
-                                                        {data.useVitrace && <p className="font-bold text-emerald-600">+ Vitrace Premium & Pipa</p>}
+                                                        {data.useVitrace && <p className="font-bold text-emerald-600">+ Vitrace Premium</p>}
                                                     </>
                                                 )}
-                                                {data.calcMode === "pipa" && <p>Pipa gorden complete (Siap pasang)</p>}
-                                                {rawW < 100 && rawW > 0 && <p className="text-amber-600 font-bold">Note: Minimal lebar 100cm</p>}
+                                                {data.calcMode === "pipe_only" && <p>Pipa gorden complete (Siap pasang)</p>}
+                                                {rawW < 1 && rawW > 0 && <p className="text-amber-600 font-bold">Note: Minimal lebar 1m</p>}
                                             </div>
                                         </td>
                                         <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                            {data.calcMode === "pipa" ? `${rawW}cm` : `${rawW}cm x ${rawH}cm`}
+                                            {dimensionLabel}
                                         </td>
                                         <td className="py-4 text-sm text-right font-bold text-slate-900">
                                             Rp {itemPrice.toLocaleString("id-ID")}

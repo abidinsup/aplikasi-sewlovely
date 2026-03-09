@@ -22,6 +22,7 @@ export default function CurtainCalculatorPage() {
     const [fabric, setFabric] = React.useState<"blackout" | "dimout">("blackout");
     const [useVitrace, setUseVitrace] = React.useState(false);
     const [model, setModel] = React.useState<"smokering" | "cantel">("smokering");
+    const [calcMode, setCalcMode] = React.useState<"package" | "gorden_only" | "pipe_only">("package");
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
@@ -89,6 +90,7 @@ export default function CurtainCalculatorPage() {
             fabric,
             useVitrace,
             model,
+            calcMode,
             totalPrice,
             unitPrice,
             surveyDate,
@@ -106,31 +108,47 @@ export default function CurtainCalculatorPage() {
         if (prices.length === 0) return;
 
         // Get prices by flexible Name matching
-        // Get prices by flexible Name matching - Removed PIPA requirement as DB names don't have it
         const packageBlackout = prices.find(p => p.name.toUpperCase().includes("BLACKOUT"))?.price || 0;
         const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
         const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
+        const pipePrice = prices.find(p => p.name.toUpperCase().includes("PIPA"))?.price || 0;
 
-        let basePackagePrice = fabric === "blackout" ? packageBlackout : packageDimout;
+        let baseFabricPrice = fabric === "blackout" ? packageBlackout : packageDimout;
         let vitracePrice = useVitrace ? packageVitrace : 0;
 
-        // Calculate total price based on Area (WxH) * (Package Price)
+        let unitPriceValue = 0;
+        if (calcMode === "package") {
+            unitPriceValue = baseFabricPrice + pipePrice + vitracePrice;
+        } else if (calcMode === "gorden_only") {
+            unitPriceValue = baseFabricPrice + vitracePrice;
+        } else if (calcMode === "pipe_only") {
+            unitPriceValue = pipePrice;
+        }
+
+        if (unitPriceValue !== unitPrice) setUnitPrice(unitPriceValue);
+
+        // Calculate total price based on Area (WxH) or Width
         const totalCalculated = windows.reduce((acc, curr) => {
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
-            if (w > 0 && h > 0) {
-                // Min charge 1m2 per window
-                const area = Math.max(1, w * h);
-                const pricePerArea = basePackagePrice + vitracePrice;
-                // Update unit price state
-                if (pricePerArea !== unitPrice) setUnitPrice(pricePerArea);
-                return acc + (area * pricePerArea);
+
+            if (calcMode === "pipe_only") {
+                if (w > 0) {
+                    const length = Math.max(1, w);
+                    return acc + (length * unitPriceValue);
+                }
+            } else {
+                if (w > 0 && h > 0) {
+                    // Min charge 1m2 per window
+                    const area = Math.max(1, w * h);
+                    return acc + (area * unitPriceValue);
+                }
             }
             return acc;
         }, 0);
 
         setTotalPrice(totalCalculated);
-    }, [windows, fabric, useVitrace, prices]);
+    }, [windows, fabric, useVitrace, calcMode, prices]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -155,9 +173,15 @@ export default function CurtainCalculatorPage() {
                         <span className="font-bold">{windows.length} Set</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Jenis Paket</span>
-                        <span className="font-bold capitalize">{fabric} + Pipa</span>
+                        <span>Jenis Hitung</span>
+                        <span className="font-bold capitalize">{calcMode === 'package' ? 'Gorden + Pipa' : calcMode === 'gorden_only' ? 'Gorden Saja' : 'Pipa Saja'}</span>
                     </div>
+                    {calcMode !== "pipe_only" && (
+                        <div className="flex justify-between">
+                            <span>Bahan Gorden</span>
+                            <span className="font-bold capitalize">{fabric}</span>
+                        </div>
+                    )}
                     <div className="flex justify-between">
                         <span>Model</span>
                         <span className="font-bold capitalize">{model}</span>
@@ -249,6 +273,48 @@ export default function CurtainCalculatorPage() {
                             </div>
                         </section>
 
+                        {/* 0.5 Tipe Pesanan */}
+                        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><Layers className="h-5 w-5" /></div>
+                                <h2 className="font-bold text-slate-900 text-lg">Pilih Tipe Pesanan</h2>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <button
+                                    onClick={() => setCalcMode("package")}
+                                    className={cn(
+                                        "px-4 py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all duration-300 text-center relative overflow-hidden",
+                                        calcMode === "package" ? "bg-emerald-50 border-emerald-500 shadow-sm" : "bg-white border-slate-100 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <span className={cn("font-bold text-sm", calcMode === "package" ? "text-emerald-800" : "text-slate-800")}>Gorden + Pipa</span>
+                                    {calcMode === "package" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-1" />}
+                                </button>
+
+                                <button
+                                    onClick={() => setCalcMode("gorden_only")}
+                                    className={cn(
+                                        "px-4 py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all duration-300 text-center relative overflow-hidden",
+                                        calcMode === "gorden_only" ? "bg-emerald-50 border-emerald-500 shadow-sm" : "bg-white border-slate-100 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <span className={cn("font-bold text-sm", calcMode === "gorden_only" ? "text-emerald-800" : "text-slate-800")}>Gorden Saja</span>
+                                    {calcMode === "gorden_only" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-1" />}
+                                </button>
+
+                                <button
+                                    onClick={() => setCalcMode("pipe_only")}
+                                    className={cn(
+                                        "px-4 py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all duration-300 text-center relative overflow-hidden",
+                                        calcMode === "pipe_only" ? "bg-emerald-50 border-emerald-500 shadow-sm" : "bg-white border-slate-100 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <span className={cn("font-bold text-sm", calcMode === "pipe_only" ? "text-emerald-800" : "text-slate-800")}>Pipa Saja</span>
+                                    {calcMode === "pipe_only" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-1" />}
+                                </button>
+                            </div>
+                        </section>
+
                         {/* 1. Ukuran Jendela */}
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
@@ -272,7 +338,7 @@ export default function CurtainCalculatorPage() {
                                                 </button>
                                             </div>
                                         )}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div className={cn("grid grid-cols-1 gap-6", calcMode === "pipe_only" ? "sm:grid-cols-1" : "sm:grid-cols-2")}>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (m)</label>
                                                 <div className="relative group">
@@ -293,19 +359,21 @@ export default function CurtainCalculatorPage() {
                                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
-                                                <div className="relative group">
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="2.8"
-                                                        className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
-                                                        value={window.height}
-                                                        onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
-                                                    />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                            {calcMode !== "pipe_only" && (
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
+                                                    <div className="relative group">
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="2.8"
+                                                            className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
+                                                            value={window.height}
+                                                            onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
+                                                        />
+                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -313,108 +381,112 @@ export default function CurtainCalculatorPage() {
                         </section>
 
                         {/* 2. Pilihan Kain */}
-                        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                                <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
-                                <h2 className="font-bold text-slate-900 text-lg">Pilihan Kain</h2>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <button
-                                    onClick={() => setFabric("blackout")}
-                                    className={cn(
-                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
-                                        fabric === "blackout"
-                                            ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                            : "bg-white border-slate-100 hover:bg-slate-50"
-                                    )}
-                                >
-                                    <span className={cn("font-bold text-base sm:text-lg", fabric === "blackout" ? "text-emerald-800" : "text-slate-800")}>Blackout</span>
-                                    <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 100% Cahaya</span>
-                                    {fabric === "blackout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
-                                </button>
-
-                                <button
-                                    onClick={() => setFabric("dimout")}
-                                    className={cn(
-                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
-                                        fabric === "dimout"
-                                            ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                            : "bg-white border-slate-100 hover:bg-slate-50"
-                                    )}
-                                >
-                                    <span className={cn("font-bold text-base sm:text-lg", fabric === "dimout" ? "text-emerald-800" : "text-slate-800")}>Dimout</span>
-                                    <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 80% Cahaya</span>
-                                    {fabric === "dimout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
-                                </button>
-                            </div>
-
-                            {/* Vitrace Toggle */}
-                            <div className={cn(
-                                "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
-                                useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
-                            )} onClick={() => setUseVitrace(!useVitrace)}>
-                                <div className="flex items-center gap-2.5 sm:gap-4">
-                                    <div className={cn(
-                                        "p-2 sm:p-2.5 rounded-xl transition-colors",
-                                        useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
-                                    )}>
-                                        <Sun className="h-5 w-5 sm:h-6 sm:w-6" />
-                                    </div>
-                                    <div>
-                                        <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
-                                        <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
-                                    </div>
-                                </div>
-                                <div className={cn(
-                                    "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
-                                    useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
-                                )}>
-                                    <div className={cn(
-                                        "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
-                                        useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
-                                    )}></div>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* 3. Model & Foto - 2 Column Grid Inside */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Model Gorden */}
+                        {calcMode !== "pipe_only" && (
                             <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                                 <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                                    <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><LinkIcon className="h-5 w-5" /></div>
-                                    <h2 className="font-bold text-slate-900 text-lg">Model Gorden</h2>
+                                    <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
+                                    <h2 className="font-bold text-slate-900 text-lg">Pilihan Kain</h2>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <button
-                                        onClick={() => setModel("smokering")}
+                                        onClick={() => setFabric("blackout")}
                                         className={cn(
-                                            "h-auto min-h-[5rem] sm:h-32 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all duration-300",
-                                            model === "smokering"
+                                            "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                            fabric === "blackout"
                                                 ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                                 : "bg-white border-slate-100 hover:bg-slate-50"
                                         )}
                                     >
-                                        <Grid className={cn("h-6 w-6 sm:h-8 sm:w-8", model === "smokering" ? "text-emerald-600" : "text-slate-400")} />
-                                        <span className={cn("text-xs sm:text-sm font-bold", model === "smokering" ? "text-emerald-700" : "text-slate-500")}>Smokering</span>
+                                        <span className={cn("font-bold text-base sm:text-lg", fabric === "blackout" ? "text-emerald-800" : "text-slate-800")}>Blackout</span>
+                                        <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 100% Cahaya</span>
+                                        {fabric === "blackout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                     </button>
+
                                     <button
-                                        onClick={() => setModel("cantel")}
+                                        onClick={() => setFabric("dimout")}
                                         className={cn(
-                                            "h-auto min-h-[5rem] sm:h-32 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all duration-300",
-                                            model === "cantel"
+                                            "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                            fabric === "dimout"
                                                 ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                                 : "bg-white border-slate-100 hover:bg-slate-50"
                                         )}
                                     >
-                                        <LinkIcon className={cn("h-6 w-6 sm:h-8 sm:w-8", model === "cantel" ? "text-emerald-600" : "text-slate-400")} />
-                                        <span className={cn("text-xs sm:text-sm font-bold", model === "cantel" ? "text-emerald-700" : "text-slate-500")}>Cantel</span>
+                                        <span className={cn("font-bold text-base sm:text-lg", fabric === "dimout" ? "text-emerald-800" : "text-slate-800")}>Dimout</span>
+                                        <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 80% Cahaya</span>
+                                        {fabric === "dimout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                     </button>
+                                </div>
+
+                                {/* Vitrace Toggle */}
+                                <div className={cn(
+                                    "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
+                                    useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
+                                )} onClick={() => setUseVitrace(!useVitrace)}>
+                                    <div className="flex items-center gap-2.5 sm:gap-4">
+                                        <div className={cn(
+                                            "p-2 sm:p-2.5 rounded-xl transition-colors",
+                                            useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
+                                        )}>
+                                            <Sun className="h-5 w-5 sm:h-6 sm:w-6" />
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
+                                            <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
+                                        </div>
+                                    </div>
+                                    <div className={cn(
+                                        "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
+                                        useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
+                                    )}>
+                                        <div className={cn(
+                                            "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
+                                            useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
+                                        )}></div>
+                                    </div>
                                 </div>
                             </section>
+                        )}
 
-                            {/* Model Section Only - No Survey Schedule for Admin */}
-                        </div>
+                        {/* 3. Model & Foto - 2 Column Grid Inside */}
+                        {calcMode !== "pipe_only" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Model Gorden */}
+                                <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                                    <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                                        <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><LinkIcon className="h-5 w-5" /></div>
+                                        <h2 className="font-bold text-slate-900 text-lg">Model Gorden</h2>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => setModel("smokering")}
+                                            className={cn(
+                                                "h-auto min-h-[5rem] sm:h-32 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all duration-300",
+                                                model === "smokering"
+                                                    ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                                                    : "bg-white border-slate-100 hover:bg-slate-50"
+                                            )}
+                                        >
+                                            <Grid className={cn("h-6 w-6 sm:h-8 sm:w-8", model === "smokering" ? "text-emerald-600" : "text-slate-400")} />
+                                            <span className={cn("text-xs sm:text-sm font-bold", model === "smokering" ? "text-emerald-700" : "text-slate-500")}>Smokering</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setModel("cantel")}
+                                            className={cn(
+                                                "h-auto min-h-[5rem] sm:h-32 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all duration-300",
+                                                model === "cantel"
+                                                    ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                                                    : "bg-white border-slate-100 hover:bg-slate-50"
+                                            )}
+                                        >
+                                            <LinkIcon className={cn("h-6 w-6 sm:h-8 sm:w-8", model === "cantel" ? "text-emerald-600" : "text-slate-400")} />
+                                            <span className={cn("text-xs sm:text-sm font-bold", model === "cantel" ? "text-emerald-700" : "text-slate-500")}>Cantel</span>
+                                        </button>
+                                    </div>
+                                </section>
+
+                                {/* Model Section Only - No Survey Schedule for Admin */}
+                            </div>
+                        )}
 
                         {/* 4. Upload Foto */}
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
