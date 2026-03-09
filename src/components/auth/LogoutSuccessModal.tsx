@@ -8,12 +8,14 @@ interface LogoutSuccessModalProps {
     isOpen: boolean;
     onClose: () => void;
     userName?: string;
+    role?: "Owner" | "Admin" | "Mitra";
 }
 
 const LogoutSuccessModal: React.FC<LogoutSuccessModalProps> = ({
     isOpen,
     onClose,
     userName = "User",
+    role = "Mitra",
 }) => {
     const [progress, setProgress] = useState(0);
 
@@ -40,6 +42,17 @@ const LogoutSuccessModal: React.FC<LogoutSuccessModalProps> = ({
             };
         }
     }, [isOpen, onClose]);
+
+    const getRoleLabel = () => {
+        switch (role) {
+            case "Owner":
+                return "OWNER / SUPER ADMIN";
+            case "Admin":
+                return "ADMINISTRATOR SYSTEM";
+            default:
+                return "MITRA AFFILIATE RESMI";
+        }
+    };
 
     return (
         <AnimatePresence>
@@ -112,8 +125,8 @@ const LogoutSuccessModal: React.FC<LogoutSuccessModalProps> = ({
                                 </span>
                             </motion.div>
 
-                            <p className="text-[#94a3b8] text-[11px] font-bold tracking-[0.25em] mb-10">
-                                SESI ANDA TELAH BERAKHIR AMAN
+                            <p className="text-[#94a3b8] text-[11px] font-bold tracking-[0.25em] mb-10 uppercase">
+                                {getRoleLabel()}
                             </p>
 
                             {/* Gradient Progress Bar */}

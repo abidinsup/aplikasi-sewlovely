@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useCallback, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { logout, getCurrentPartner } from '@/lib/auth';
+import { logout, getCurrentPartner, isAdmin } from '@/lib/auth';
 import { toast } from 'sonner';
 import InactivityWarningModal from '@/components/auth/InactivityWarningModal';
 import LogoutSuccessModal from '@/components/auth/LogoutSuccessModal';
@@ -24,6 +24,7 @@ export const SessionTimeoutProvider: React.FC<{ children: React.ReactNode }> = (
     const [showWarning, setShowWarning] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [userName, setUserName] = useState("User");
+    const [userRole, setUserRole] = useState<"Owner" | "Admin" | "Mitra">("Mitra");
     const [secondsRemaining, setSecondsRemaining] = useState(COUNTDOWN_DURATION);
 
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,12 +32,53 @@ export const SessionTimeoutProvider: React.FC<{ children: React.ReactNode }> = (
 
     const isPublicPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/';
 
+    // Synchronize User Info
+    const syncUserInfo = useCallback(() => {
+        // We sync if NOT on public page, or even if on public page just to have state ready
+        const partner = getCurrentPartner();
+        const adminStatus = isAdmin();
+
+        if (adminStatus) {
+            setUserName("BOS BIDIN");
+            setUserRole("Owner");
+        } else if (partner) {
+            setUserName(partner.full_name || "Mitra");
+            setUserRole("Mitra");
+        } else {
+            setUserName("User");
+            setUserRole("Mitra");
+        }
+    }, []);
+
+    // Initial sync and on route change
+    useEffect(() => {
+        syncUserInfo();
+    }, [pathname, syncUserInfo]);
+
     const handleLogout = useCallback(async (isAuto = true) => {
         if (isPublicPage) return;
 
-        // Get name before logout clears it
+        // Perform one last sync to get the absolute latest from localStorage
         const partner = getCurrentPartner();
-        setUserName(partner?.full_name || "User");
+        const adminStatus = isAdmin();
+
+        let targetName = "User";
+        let targetRole: "Owner" | "Admin" | "Mitra" = "Mitra";
+
+        if (adminStatus) {
+            targetName = "BOS BIDIN";
+            targetRole = "Owner";
+        } else if (partner) {
+            targetName = partner.full_name || "Mitra";
+            targetRole = "Mitra";
+        }
+
+        // Set state first to ensure modal sees it
+        setUserName(targetName);
+        setUserRole(targetRole);
+
+        // Show Logout Modal
+        setShowLogoutModal(true);
 
         // Clear all timers
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -44,10 +86,7 @@ export const SessionTimeoutProvider: React.FC<{ children: React.ReactNode }> = (
 
         setShowWarning(false);
 
-        // Show Logout Modal first
-        setShowLogoutModal(true);
-
-        // Actual logout
+        // Actual logout (awaiting it after showing modal)
         await logout();
 
         if (isAuto) {
@@ -141,6 +180,7 @@ export const SessionTimeoutProvider: React.FC<{ children: React.ReactNode }> = (
                     router.push('/login?reason=logout');
                 }}
                 userName={userName}
+                role={userRole}
             />
         </SessionTimeoutContext.Provider>
     );
