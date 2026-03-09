@@ -273,22 +273,21 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2 pt-2">
+                <div className="flex flex-col gap-3 pt-2">
                     <Button
                         onClick={addItemToList}
-                        variant="outline"
-                        className="w-full h-12 border-emerald-500 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-xl font-black text-[11px] uppercase tracking-wide flex items-center justify-center gap-2 border-2 transition-all active:scale-95"
+                        className="w-full h-12 md:h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] md:text-xs uppercase tracking-tight flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-100 group"
                     >
-                        <Plus className="h-4 w-4" />
-                        SIMPAN ITEM KE DAFTAR
+                        <Plus className="h-4 w-4 shrink-0 group-hover:rotate-90 transition-transform" />
+                        <span className="truncate">SIMPAN KE DAFTAR</span>
                     </Button>
 
                     <Button
                         onClick={handleCreateInvoice}
-                        className="w-full h-14 bg-slate-900 hover:bg-emerald-600 text-white rounded-xl font-black text-base shadow-lg shadow-slate-900/10 flex items-center justify-center gap-3 transition-all duration-300 active:scale-95"
+                        className="w-full h-14 md:h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm md:text-base shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 group"
                     >
-                        <Printer className="h-5 w-5" />
-                        CETAK INVOICE
+                        <Printer className="h-5 w-5 shrink-0 group-hover:animate-bounce" />
+                        <span className="truncate">CETAK INVOICE</span>
                     </Button>
                 </div>
 
@@ -385,10 +384,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                 <Button
                                     onClick={addWindow}
                                     size="sm"
-                                    variant="outline"
-                                    className="w-full sm:w-auto h-11 px-5 gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 rounded-xl font-bold transition-all active:scale-95 shadow-sm"
+                                    className="w-full sm:w-auto h-11 px-6 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 hover:bg-emerald-600 hover:text-white rounded-xl font-black text-[10px] md:text-xs uppercase tracking-tight transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
                                 >
-                                    <Plus className="h-4 w-4" /> Tambah Jendela
+                                    <Plus className="h-4 w-4" /> TAMBAH JENDELA
                                 </Button>
                             </div>
 
@@ -486,9 +484,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                                 key={type}
                                                 onClick={() => setBlindType(type)}
                                                 className={cn(
-                                                    "flex-1 py-2 px-3 rounded-lg text-[10px] font-extrabold uppercase transition-all duration-300",
+                                                    "flex-1 py-2 px-1 rounded-lg text-[9px] xl:text-[10px] font-black uppercase transition-all duration-300 truncate",
                                                     blindType === type
-                                                        ? "bg-white text-emerald-700 shadow-sm border border-emerald-50 scale-100"
+                                                        ? "bg-emerald-600 text-white shadow-md scale-100"
                                                         : "bg-transparent text-slate-400 hover:text-slate-600 hover:bg-white/50"
                                                 )}
                                             >
