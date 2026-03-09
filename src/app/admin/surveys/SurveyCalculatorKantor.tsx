@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, RefreshCw, Grid, Layers, Building2, Trash2, Printer, Plus, CheckCircle2, Upload, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, RefreshCw, Grid, Layers, Building2, Trash2, Printer, Plus, CheckCircle2, Upload, Image as ImageIcon, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -216,73 +216,93 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
             "bg-white border-slate-100",
-            isMobile ? "max-w-md mx-auto space-y-4" : "p-6 rounded-3xl border shadow-lg shadow-emerald-900/5 space-y-6 sticky top-6"
+            isMobile ? "max-w-md mx-auto space-y-4" : "p-8 rounded-[2.5rem] border shadow-2xl shadow-emerald-900/10 space-y-8 sticky top-10"
         )}>
-            {!isMobile && <h3 className="font-bold text-slate-900 text-lg mb-4">Ringkasan Pesanan</h3>}
+            {!isMobile && (
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-emerald-600 rounded-xl text-white shadow-lg shadow-emerald-200"><ShoppingBag className="h-5 w-5" /></div>
+                    <h3 className="font-bold text-slate-900 text-xl tracking-tight">Ringkasan Pesanan</h3>
+                </div>
+            )}
 
-            <div className="space-y-4">
-                <div className="flex items-end justify-between px-2">
-                    <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Estimasi</p>
-                        <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
-                            Rp {totalPrice.toLocaleString("id-ID")}
+            <div className="space-y-6">
+                <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 pl-1">Total Estimasi</p>
+                    <div className="bg-emerald-50/50 p-5 rounded-3xl border border-emerald-100/50 relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-100/20 rounded-full blur-2xl group-hover:bg-emerald-200/40 transition-colors" />
+                        <h3 className="text-4xl font-black text-emerald-600 tracking-tighter relative z-10">
+                            <span className="text-xl mr-1 opacity-70">Rp</span>
+                            {totalPrice.toLocaleString("id-ID")}
                         </h3>
                     </div>
                 </div>
 
-                <div className="space-y-3 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block overflow-hidden">
+                <div className="space-y-4 text-sm text-slate-600 hidden lg:block">
                     {savedItems.length > 0 && (
-                        <div className="space-y-3 mb-3 border-b border-slate-200 pb-3">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daftar Item</p>
-                            {savedItems.map((item, idx) => (
-                                <div key={item.id} className="flex justify-between items-start gap-2 bg-white p-2 rounded-lg border border-slate-100">
-                                    <div className="flex-1">
-                                        <p className="font-bold text-[11px] text-slate-800 capitalize leading-tight">{item.productName}</p>
-                                        <p className="text-[10px] text-slate-400">{item.windows.length} Jendela @ Rp {item.unitPrice.toLocaleString()}</p>
+                        <div className="space-y-3">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Daftar Item Terpilih</p>
+                            <div className="max-h-[300px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                                {savedItems.map((item, idx) => (
+                                    <div key={item.id} className="group/item flex justify-between items-start gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:bg-white transition-all shadow-sm">
+                                        <div className="flex-1">
+                                            <p className="font-black text-xs text-slate-800 uppercase tracking-tight leading-none mb-1 group-hover/item:text-emerald-700">{item.productName}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className="text-[10px] bg-slate-200/50 text-slate-500 px-2 py-0.5 rounded-full font-bold">{item.windows.length} Jendela</span>
+                                                <span className="text-[10px] text-slate-400">@ Rp {item.unitPrice.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right flex flex-col items-end gap-2">
+                                            <p className="font-black text-sm text-emerald-600 tracking-tight">Rp {item.itemTotalPrice.toLocaleString("id-ID")}</p>
+                                            <button
+                                                onClick={() => removeItemFromList(item.id)}
+                                                className="w-7 h-7 flex items-center justify-center bg-white text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full border border-slate-100 transition-all"
+                                                title="Hapus dari daftar"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-bold text-[11px] text-emerald-600">Rp {item.itemTotalPrice.toLocaleString("id-ID")}</p>
-                                        <button
-                                            onClick={() => removeItemFromList(item.id)}
-                                            className="text-[10px] text-red-400 hover:text-red-500 font-medium"
-                                        >
-                                            Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     )}
 
-                    <div className="flex justify-between">
-                        <span>Input Saat Ini</span>
-                        <span className="font-bold">{windows.filter(w => w.width && w.height).length} Jendela</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Jenis Blind</span>
-                        <span className="font-bold capitalize">{blindType}</span>
+                    <div className="pt-4 space-y-3 border-t border-slate-50">
+                        <div className="flex justify-between items-center px-1">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase">Input Aktif</span>
+                            <span className="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">{windows.filter(w => w.width && w.height).length} Jendela</span>
+                        </div>
+                        <div className="flex justify-between items-center px-1 text-slate-500 italic text-[11px]">
+                            <span>Pemasangan & Pengiriman</span>
+                            <span className="font-black text-emerald-500 uppercase not-italic">Gratis</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3 pt-4">
                     <Button
                         onClick={addItemToList}
                         variant="outline"
-                        className="w-full h-12 border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold flex items-center justify-center gap-2 border-2"
+                        className="w-full h-14 border-emerald-200 bg-emerald-50/30 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 border-2 transition-all active:scale-95 shadow-lg shadow-emerald-900/5"
                     >
-                        <Plus className="h-4 w-4" />
-                        Simpan ke Daftar
+                        <Plus className="h-5 w-5" />
+                        Tambah Item Ke Daftar
                     </Button>
 
-                    <Button onClick={handleCreateInvoice} className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
-                        <Printer className="h-5 w-5" />
-                        Buat Invoice
+                    <Button
+                        onClick={handleCreateInvoice}
+                        className="w-full h-16 bg-slate-900 hover:bg-emerald-600 text-white rounded-[1.25rem] font-black text-lg shadow-xl shadow-slate-900/20 hover:shadow-emerald-600/30 flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 group"
+                    >
+                        <Printer className="h-6 w-6 group-hover:rotate-12 transition-transform" />
+                        BUAT INVOICE
                     </Button>
                 </div>
 
-                <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
-                    *Harga sudah termasuk pemasangan
-                </p>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] text-slate-400 italic text-center leading-relaxed font-medium">
+                        *Estimasi harga sudah termasuk jasa pasang & survey lokasi. Harga final dapat berubah jika ada tambahan aksesories.
+                    </p>
+                </div>
             </div>
         </div>
     );
@@ -299,35 +319,38 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <div className="lg:col-span-8 space-y-8">
                     {/* 0. Data Pemesan */}
-                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                            <div className="p-2 bg-slate-100 rounded-lg text-slate-600"><Building2 className="h-5 w-5" /></div>
-                            <h2 className="font-bold text-slate-900 text-lg">Data Pemesan</h2>
+                    <section className="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 space-y-6">
+                        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+                            <div className="p-2.5 bg-slate-50 rounded-xl text-slate-400 shadow-sm border border-slate-100"><Building2 className="h-5 w-5" /></div>
+                            <div>
+                                <h2 className="font-bold text-slate-900 text-lg leading-none">Data Pemesan</h2>
+                                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-tight">Informasi kontak pelanggan kantor</p>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Nama Lengkap</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nama Lengkap</label>
                                 <Input
                                     placeholder="Nama Pemesan"
-                                    className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300"
+                                    className="h-12 bg-slate-50/50 border-slate-100 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300 font-medium"
                                     value={customerInfo.name}
                                     onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">No. WhatsApp</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">No. WhatsApp</label>
                                 <Input
                                     placeholder="085159..."
-                                    className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300"
+                                    className="h-12 bg-slate-50/50 border-slate-100 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300 font-medium"
                                     value={customerInfo.phone}
                                     onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Alamat Pemasangan</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Alamat Pemasangan</label>
                                 <Input
-                                    placeholder="Alamat Kantor"
-                                    className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300"
+                                    placeholder="Alamat Lengkap Kantor / Lokasi Pemasangan"
+                                    className="h-12 bg-slate-50/50 border-slate-100 focus-visible:ring-emerald-500 rounded-xl placeholder:text-slate-300 font-medium"
                                     value={customerInfo.address}
                                     onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
                                 />
@@ -335,38 +358,124 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                         </div>
                     </section>
 
-                    {/* 1. Pilih Produk & Harga */}
-                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                            <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
-                            <h2 className="font-bold text-slate-900 text-lg">Pilihan Produk & Harga</h2>
+                    {/* 1. Ukuran Jendela */}
+                    <section className="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 space-y-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-50 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600 shadow-sm border border-emerald-100"><Grid className="h-5 w-5" /></div>
+                                <div>
+                                    <h2 className="font-bold text-slate-900 text-lg leading-none">Ukuran Jendela</h2>
+                                    <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-tight">Input lebar & tinggi jendela</p>
+                                </div>
+                            </div>
+                            <Button
+                                onClick={addWindow}
+                                size="sm"
+                                variant="outline"
+                                className="w-full sm:w-auto h-11 px-5 gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 rounded-xl font-bold transition-all active:scale-95 shadow-sm"
+                            >
+                                <Plus className="h-4 w-4" /> Tambah Jendela
+                            </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Cari dari Katalog</label>
-                                <select
-                                    className="w-full h-12 bg-slate-50 border-slate-200 rounded-xl px-4 text-sm focus:ring-emerald-500 focus:border-emerald-500"
-                                    value={selectedProductId}
-                                    onChange={(e) => handleProductChange(e.target.value)}
-                                >
-                                    <option value="custom">-- Input Manual / Harga Custom --</option>
-                                    {prices.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name} (Rp {p.price.toLocaleString()})</option>
-                                    ))}
-                                </select>
+                        <div className="space-y-6">
+                            {windows.map((window, index) => (
+                                <div key={window.id} className={cn(
+                                    "group relative p-6 rounded-2xl border transition-all duration-300",
+                                    windows.length > 1
+                                        ? "bg-slate-50/40 border-slate-100 hover:border-emerald-200 hover:bg-white hover:shadow-xl hover:shadow-emerald-900/5"
+                                        : "bg-transparent border-transparent p-0"
+                                )}>
+                                    {windows.length > 1 && (
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-6 h-6 flex items-center justify-center bg-emerald-600 text-white text-[10px] font-bold rounded-full">{index + 1}</span>
+                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Data Jendela</span>
+                                            </div>
+                                            <button
+                                                onClick={() => removeWindow(window.id)}
+                                                className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all"
+                                                title="Hapus Jendela"
+                                            >
+                                                <Trash2 className="h-4.5 w-4.5" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                        <div className="space-y-2.5 text-center sm:text-left">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Lebar (cm)</label>
+                                            <div className="relative group/input">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="100"
+                                                    className="h-16 bg-white border-slate-200 focus-visible:ring-emerald-500 text-center text-2xl font-black text-slate-800 rounded-2xl transition-all shadow-sm group-hover/input:border-emerald-400 group-hover/input:shadow-emerald-100"
+                                                    value={window.width}
+                                                    onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
+                                                />
+                                                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 font-black group-focus-within/input:text-emerald-500 transition-colors uppercase">cm</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2.5 text-center sm:text-left">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Tinggi (cm)</label>
+                                            <div className="relative group/input">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="150"
+                                                    className="h-16 bg-white border-slate-200 focus-visible:ring-emerald-500 text-center text-2xl font-black text-slate-800 rounded-2xl transition-all shadow-sm group-hover/input:border-emerald-400 group-hover/input:shadow-emerald-100"
+                                                    value={window.height}
+                                                    onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
+                                                />
+                                                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 font-black group-focus-within/input:text-emerald-500 transition-colors uppercase">cm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* 2. Pilih Produk & Harga */}
+                    <section className="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 space-y-6">
+                        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+                            <div className="p-2.5 bg-purple-50 rounded-xl text-purple-600 shadow-sm border border-purple-100"><Layers className="h-5 w-5" /></div>
+                            <div>
+                                <h2 className="font-bold text-slate-900 text-lg leading-none">Pilihan Produk & Harga</h2>
+                                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-tight">Tentukan tipe & harga jual</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Cari dari Katalog</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full h-12 bg-slate-50 border-slate-200 hover:border-purple-300 transition-all rounded-xl px-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none appearance-none cursor-pointer"
+                                        value={selectedProductId}
+                                        onChange={(e) => handleProductChange(e.target.value)}
+                                    >
+                                        <option value="custom">-- Input Manual / Harga Custom --</option>
+                                        {prices.map(p => (
+                                            <option key={p.id} value={p.id}>{p.name} (Rp {p.price.toLocaleString()})</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tipe / Kategori</label>
-                                <div className="flex gap-2">
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Tipe / Kategori</label>
+                                <div className="flex p-1.5 bg-slate-100 rounded-xl gap-1">
                                     {(['roller', 'vertical', 'venetian'] as const).map(type => (
                                         <button
                                             key={type}
                                             onClick={() => setBlindType(type)}
                                             className={cn(
-                                                "flex-1 py-2 px-3 rounded-lg text-[10px] font-bold uppercase transition-all",
-                                                blindType === type ? "bg-emerald-600 text-white shadow-md shadow-emerald-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                                "flex-1 py-2 px-3 rounded-lg text-[10px] font-extrabold uppercase transition-all duration-300",
+                                                blindType === type
+                                                    ? "bg-white text-emerald-700 shadow-sm border border-emerald-50 scale-100"
+                                                    : "bg-transparent text-slate-400 hover:text-slate-600 hover:bg-white/50"
                                             )}
                                         >
                                             {type}
@@ -375,86 +484,32 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Nama Produk (Muncul di Invoice)</label>
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nama Produk (di Invoice)</label>
                                 <Input
                                     placeholder="Contoh: Roller Blind Blackout Seri SP.20"
-                                    className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl"
+                                    className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold text-slate-700"
                                     value={manualProductName}
                                     onChange={(e) => setManualProductName(e.target.value)}
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Harga Jual per m² (Rp)</label>
-                                <div className="relative">
+                            <div className="space-y-2.5">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Harga Jual / m² (Rp)</label>
+                                <div className="relative group/price">
                                     <Input
                                         type="number"
                                         placeholder="0"
-                                        className="h-12 bg-slate-100 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold pr-16"
+                                        className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-black text-slate-800 pr-20 transition-all border-l-4 border-l-emerald-500"
                                         value={manualPrice}
                                         onChange={(e) => setManualPrice(e.target.value)}
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/ m²</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100">/ M²</span>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic pl-1">*Hapus dan ketik untuk harga custom</p>
+                                <p className="text-[10px] text-slate-400 font-medium italic pl-1 flex items-center gap-1.5 mt-2">
+                                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Ketik angka untuk mengubah harga manual
+                                </p>
                             </div>
-                        </div>
-                    </section>
-
-                    {/* 2. Ukuran Jendela */}
-                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-2">
-                                <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600"><Grid className="h-5 w-5" /></div>
-                                <h2 className="font-bold text-slate-900 text-base sm:text-lg">Ukuran Jendela</h2>
-                            </div>
-                            <Button onClick={addWindow} size="sm" variant="outline" className="text-[11px] h-8 gap-1 border-emerald-200 hover:bg-emerald-50">
-                                <Plus className="h-3 w-3" /> Tambah Jendela
-                            </Button>
-                        </div>
-
-                        <div className="space-y-6">
-                            {windows.map((window, index) => (
-                                <div key={window.id} className={cn("relative p-4 rounded-2xl border transition-all", windows.length > 1 ? "bg-slate-50/50 border-slate-200" : "bg-transparent border-transparent p-0")}>
-                                    {windows.length > 1 && (
-                                        <div className="flex items-center justify-between mb-3">
-                                            <span className="text-xs font-bold text-slate-400 uppercase">Jendela {index + 1}</span>
-                                            <button onClick={() => removeWindow(window.id)} className="text-red-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    )}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm)</label>
-                                            <div className="relative group">
-                                                <Input
-                                                    type="number"
-                                                    placeholder="100"
-                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none"
-                                                    value={window.width}
-                                                    onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
-                                                />
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
-                                            <div className="relative group">
-                                                <Input
-                                                    type="number"
-                                                    placeholder="150"
-                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none"
-                                                    value={window.height}
-                                                    onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
-                                                />
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </section>
 
