@@ -129,8 +129,12 @@ export default function CurtainCalculatorPage() {
 
         // Calculate total price based on Area (WxH) or Width
         const totalCalculated = windows.reduce((acc, curr) => {
-            const w = Number(curr.width) || 0;
-            const h = Number(curr.height) || 0;
+            const rawW = Number(curr.width) || 0;
+            const rawH = Number(curr.height) || 0;
+
+            // Convert to meters for calculation
+            const w = rawW / 100;
+            const h = rawH / 100;
 
             if (calcMode === "pipe_only") {
                 if (w > 0) {
@@ -340,7 +344,7 @@ export default function CurtainCalculatorPage() {
                                         )}
                                         <div className={cn("grid grid-cols-1 gap-6", calcMode === "pipe_only" ? "sm:grid-cols-1" : "sm:grid-cols-2")}>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (m)</label>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm) {window.width && parseFloat(window.width) < 100 && <span className="text-amber-600 font-bold ml-1">(Min 100cm)</span>}</label>
                                                 <div className="relative group">
                                                     <style jsx global>{`
                                                         input[type=number]::-webkit-inner-spin-button, 
@@ -351,26 +355,26 @@ export default function CurtainCalculatorPage() {
                                                     `}</style>
                                                     <Input
                                                         type="number"
-                                                        placeholder="2.4"
+                                                        placeholder="240"
                                                         className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                         value={window.width}
                                                         onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                                 </div>
                                             </div>
                                             {calcMode !== "pipe_only" && (
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
                                                     <div className="relative group">
                                                         <Input
                                                             type="number"
-                                                            placeholder="2.8"
+                                                            placeholder="280"
                                                             className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                             value={window.height}
                                                             onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
                                                         />
-                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                                     </div>
                                                 </div>
                                             )}

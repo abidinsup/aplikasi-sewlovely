@@ -215,8 +215,12 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         }
 
         const windowsTotal = windows.reduce((acc, curr) => {
-            const w = Number(curr.width) || 0;
-            const h = Number(curr.height) || 0;
+            const rawW = Number(curr.width) || 0;
+            const rawH = Number(curr.height) || 0;
+
+            // Convert to meters for calculation
+            const w = rawW / 100;
+            const h = rawH / 100;
 
             if (calcMode === "pipe_only") {
                 if (w > 0) {
@@ -428,30 +432,30 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                                     )}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (m) {window.width && parseFloat(window.width) < 1 && <span className="text-amber-600 font-bold ml-1">(Min 1m)</span>}</label>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm) {window.width && parseFloat(window.width) < 100 && <span className="text-amber-600 font-bold ml-1">(Min 100cm)</span>}</label>
                                             <div className="relative group">
                                                 <Input
                                                     type="number"
-                                                    placeholder="2.4"
+                                                    placeholder="240"
                                                     className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                     value={window.width}
                                                     onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
                                                 />
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                             </div>
                                         </div>
                                         {calcMode !== 'pipe_only' && (
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
                                                 <div className="relative group">
                                                     <Input
                                                         type="number"
-                                                        placeholder="2.8"
+                                                        placeholder="280"
                                                         className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                         value={window.height}
                                                         onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                                 </div>
                                             </div>
                                         )}
@@ -499,34 +503,32 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                             </div>
 
                             {/* Vitrace Toggle */}
-                            {calcMode !== "pipe_only" && (
-                                <div className={cn(
-                                    "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
-                                    useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
-                                )} onClick={() => setUseVitrace(!useVitrace)}>
-                                    <div className="flex items-center gap-2.5 sm:gap-4">
-                                        <div className={cn(
-                                            "p-2 sm:p-2.5 rounded-xl transition-colors",
-                                            useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
-                                        )}>
-                                            <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
-                                        </div>
-                                        <div>
-                                            <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
-                                            <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
-                                        </div>
-                                    </div>
+                            <div className={cn(
+                                "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
+                                useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
+                            )} onClick={() => setUseVitrace(!useVitrace)}>
+                                <div className="flex items-center gap-2.5 sm:gap-4">
                                     <div className={cn(
-                                        "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
-                                        useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
+                                        "p-2 sm:p-2.5 rounded-xl transition-colors",
+                                        useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
                                     )}>
-                                        <div className={cn(
-                                            "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
-                                            useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
-                                        )}></div>
+                                        <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                                    </div>
+                                    <div>
+                                        <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
+                                        <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
                                     </div>
                                 </div>
-                            )}
+                                <div className={cn(
+                                    "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
+                                    useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
+                                )}>
+                                    <div className={cn(
+                                        "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
+                                        useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
+                                    )}></div>
+                                </div>
+                            </div>
                         </section>
                     )}
 

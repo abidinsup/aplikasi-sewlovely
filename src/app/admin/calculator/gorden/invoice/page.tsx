@@ -270,13 +270,13 @@ function InvoiceContent() {
                                 let dimensionLabel = "";
 
                                 if (data.calcMode === "pipe_only") {
-                                    const length = Math.max(1, rawW);
+                                    const length = Math.max(1, rawW / 100);
                                     itemPrice = length * (data.unitPrice || 0);
-                                    dimensionLabel = `${rawW}m`;
+                                    dimensionLabel = `${rawW}cm`;
                                 } else {
-                                    const area = Math.max(1, rawW * rawH);
+                                    const area = Math.max(1, (rawW / 100) * (rawH / 100));
                                     itemPrice = area * (data.unitPrice || 0);
-                                    dimensionLabel = `${rawW}m x ${rawH}m`;
+                                    dimensionLabel = `${rawW}cm x ${rawH}cm`;
                                 }
 
                                 let itemLabel = "Gorden Rumah";
