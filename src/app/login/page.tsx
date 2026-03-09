@@ -74,7 +74,7 @@ export default function LoginPage() {
                     loginAsAdmin();
                     setSuccessModal({
                         isOpen: true,
-                        name: "Owner Sewlovely",
+                        name: "BOS BIDIN",
                         role: "Owner"
                     });
                     return;
