@@ -11,12 +11,22 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Logo } from "@/components/ui/logo";
 import { loginWithEmail, loginAsAdmin } from "@/lib/auth";
+import LoginSuccessModal from "@/components/auth/LoginSuccessModal";
 
 export default function LoginPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = React.useState(false);
     const [credentials, setCredentials] = React.useState({ username: "", password: "" });
     const [failedAttempts, setFailedAttempts] = React.useState(0);
+    const [successModal, setSuccessModal] = React.useState<{
+        isOpen: boolean;
+        name: string;
+        role: "Owner" | "Admin" | "Mitra"
+    }>({
+        isOpen: false,
+        name: "",
+        role: "Mitra"
+    });
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,11 +49,12 @@ export default function LoginPage() {
 
         if (result.success && result.partner) {
             setFailedAttempts(0);
-            // Login Mitra Sukses
-            toast.success("Login Berhasil", {
-                description: `Selamat datang, ${result.partner.full_name}!`
+            // Login Mitra Sukses - Tampilkan Modal Premium
+            setSuccessModal({
+                isOpen: true,
+                name: result.partner.full_name,
+                role: "Mitra"
             });
-            router.push("/dashboard");
         } else {
             const newAttempts = failedAttempts + 1;
             setFailedAttempts(newAttempts);
@@ -61,8 +72,11 @@ export default function LoginPage() {
                 if (result.error === 'Profil mitra tidak ditemukan.') {
                     setFailedAttempts(0);
                     loginAsAdmin();
-                    toast.success("Login Berhasil", { description: "Selamat datang kembali, Owner!" });
-                    router.push("/admin/dashboard");
+                    setSuccessModal({
+                        isOpen: true,
+                        name: "Owner Sewlovely",
+                        role: "Owner"
+                    });
                     return;
                 }
             }
@@ -140,6 +154,20 @@ export default function LoginPage() {
                     Daftar Mitra Affiliate
                 </Link>
             </div>
+
+            <LoginSuccessModal
+                isOpen={successModal.isOpen}
+                onClose={() => {
+                    setSuccessModal(prev => ({ ...prev, isOpen: false }));
+                    if (successModal.role === "Owner" || successModal.role === "Admin") {
+                        router.push("/admin/dashboard");
+                    } else {
+                        router.push("/dashboard");
+                    }
+                }}
+                userName={successModal.name}
+                role={successModal.role}
+            />
         </AuthLayout>
     );
 }
