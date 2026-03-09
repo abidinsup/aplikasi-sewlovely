@@ -27,6 +27,8 @@ interface SurveySchedule {
         affiliate_code: string;
     };
     invoices?: {
+        id: string;
+        payment_status: string;
         commission_paid: boolean;
     }[];
 }
@@ -257,16 +259,34 @@ export default function SurveyCard({ survey, onUpdateStatus, onDisburseCommissio
                                     Selesaikan Visit
                                 </Button>
                             )}
-                            {survey.status === "completed" && (
-                                <Button
-                                    onClick={() => onUpdateStatus(survey.id, "installation")}
-                                    size="sm"
-                                    className="bg-orange-600 hover:bg-orange-700 text-white gap-2 h-10 shadow-lg shadow-orange-600/20 w-full"
-                                >
-                                    <Upload className="h-4 w-4" />
-                                    Mulai Pemasangan
-                                </Button>
-                            )}
+                            {survey.status === "completed" && (() => {
+                                const hasInvoice = survey.invoices && survey.invoices.length > 0;
+                                const isPaid = hasInvoice && survey.invoices?.[0]?.payment_status === 'paid';
+
+                                return (
+                                    <div className="w-full space-y-2">
+                                        <Button
+                                            onClick={() => onUpdateStatus(survey.id, "installation")}
+                                            disabled={!isPaid}
+                                            size="sm"
+                                            className={cn(
+                                                "w-full h-10 gap-2 shadow-lg transition-all",
+                                                isPaid
+                                                    ? "bg-orange-600 hover:bg-orange-700 text-white shadow-orange-600/20"
+                                                    : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none border border-slate-200"
+                                            )}
+                                        >
+                                            <Upload className="h-4 w-4" />
+                                            {!hasInvoice ? "Belum Ada Invoice" : !isPaid ? "Belum Lunas" : "Mulai Pemasangan"}
+                                        </Button>
+                                        {!isPaid && (
+                                            <p className="text-[10px] text-center font-bold text-amber-600 animate-pulse uppercase tracking-tighter">
+                                                {!hasInvoice ? "⚠️ Cetak Invoice Terlebih Dahulu" : "💳 Lakukan Pembayaran Pelanggan"}
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                             {survey.status === "installation" && (
                                 <Button
                                     onClick={() => onUpdateStatus(survey.id, "done")}

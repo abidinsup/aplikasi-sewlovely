@@ -32,6 +32,8 @@ interface SurveySchedule {
         affiliate_code: string;
     };
     invoices?: {
+        id: string;
+        payment_status: string;
         commission_paid: boolean;
     }[];
 }
@@ -61,7 +63,7 @@ export default function SurveysPage() {
                         affiliate_code
                     ),
                     invoices (
-                        commission_paid
+                        *
                     )
                 `)
                 .order('survey_date', { ascending: true })
