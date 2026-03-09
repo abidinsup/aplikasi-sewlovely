@@ -38,7 +38,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     const [surveyTime] = React.useState<string | null>(survey.survey_time);
     const [fabric, setFabric] = React.useState<"blackout" | "dimout">("blackout");
     const [useVitrace, setUseVitrace] = React.useState(false);
-    const [calcMode, setCalcMode] = React.useState<"paket" | "gorden" | "pipa">("paket");
+    const [calcMode, setCalcMode] = React.useState<"package" | "gorden_only" | "pipe_only">("package");
     const [model, setModel] = React.useState<"smokering" | "cantel">("smokering");
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
@@ -147,16 +147,16 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
             return;
         }
 
-        // Validate no zero values (only for width, and height if not pipa mode)
+        // Validate no zero values (only for width, and height if not pipe mode)
         const hasZeroValues = windows.some(w => {
             const wVal = parseFloat(w.width);
             const hVal = parseFloat(w.height);
-            if (calcMode === "pipa") return wVal <= 0;
+            if (calcMode === "pipe_only") return wVal <= 0;
             return wVal <= 0 || hVal <= 0;
         });
 
         if (hasZeroValues) {
-            toast.error(calcMode === "pipa" ? "Lebar harus lebih dari 0" : "Lebar dan tinggi harus lebih dari 0");
+            toast.error(calcMode === "pipe_only" ? "Lebar harus lebih dari 0" : "Lebar dan tinggi harus lebih dari 0");
             return;
         }
 
@@ -196,34 +196,39 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     React.useEffect(() => {
         if (prices.length === 0) return;
 
-        // Get prices from database with fallback matching
-        const blackoutPrice = prices.find(p => p.name === "Gorden Blackout")?.price || 0;
-        const dimoutPrice = prices.find(p => p.name === "Gorden Dimout")?.price || 0;
-        const vitracePrice = prices.find(p => p.name === "Vitrace")?.price || 0;
-        const pipaPrice = prices.find(p => p.name === "Pipa Gorden" || p.name === "Pipa Complete")?.price || 0;
+        // Get prices by flexible Name matching
+        const packageBlackout = prices.find(p => p.name.toUpperCase().includes("BLACKOUT"))?.price || 0;
+        const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
+        const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
+        const pipePriceValue = prices.find(p => p.name.toUpperCase().includes("PIPA"))?.price || 0;
 
-        const currentGordenPrice = fabric === "blackout" ? blackoutPrice : dimoutPrice;
-        const currentVitracePrice = useVitrace ? vitracePrice : 0;
+        let baseFabricPrice = fabric === "blackout" ? packageBlackout : packageDimout;
+        let vitracePriceVal = useVitrace ? packageVitrace : 0;
+
+        let unitPriceValue = 0;
+        if (calcMode === "package") {
+            unitPriceValue = baseFabricPrice + pipePriceValue + vitracePriceVal;
+        } else if (calcMode === "gorden_only") {
+            unitPriceValue = baseFabricPrice + vitracePriceVal;
+        } else if (calcMode === "pipe_only") {
+            unitPriceValue = pipePriceValue;
+        }
 
         const windowsTotal = windows.reduce((acc, curr) => {
-            const rawW = Number(curr.width) || 0;
-            const rawH = Number(curr.height) || 0;
+            const w = Number(curr.width) || 0;
+            const h = Number(curr.height) || 0;
 
-            if (rawW > 0) {
-                // Rules: Min Width 100cm (1m), Volume = W/100 x H/100
-                const w = Math.max(100, rawW) / 100;
-                const h = rawH / 100;
-
-                let itemTotal = 0;
-                if (calcMode === "paket") {
-                    itemTotal = (w * h * (currentGordenPrice + currentVitracePrice)) + (w * pipaPrice);
-                } else if (calcMode === "gorden") {
-                    itemTotal = (w * h * (currentGordenPrice + currentVitracePrice));
-                } else if (calcMode === "pipa") {
-                    itemTotal = (w * pipaPrice);
+            if (calcMode === "pipe_only") {
+                if (w > 0) {
+                    const length = Math.max(1, w);
+                    return acc + (length * unitPriceValue);
                 }
-
-                return acc + itemTotal;
+            } else {
+                if (w > 0 && h > 0) {
+                    // Min charge 1m2 per window
+                    const area = Math.max(1, w * h);
+                    return acc + (area * unitPriceValue);
+                }
             }
             return acc;
         }, 0);
@@ -233,9 +238,8 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         }, 0);
 
         setTotalPrice(windowsTotal + otherItemsTotal);
-        // Set unit price for reference (Gorden + Vitrace)
-        setUnitPrice(currentGordenPrice + currentVitracePrice);
-        setPipaPrice(pipaPrice);
+        setUnitPrice(unitPriceValue);
+        setPipaPrice(pipePriceValue);
     }, [windows, fabric, useVitrace, prices, otherItems, calcMode]);
 
     const SummaryCard = ({ isMobile = false }) => (
@@ -261,8 +265,8 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                         <span className="font-bold">{windows.length} Set</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Jenis Pesanan</span>
-                        <span className="font-bold uppercase">{calcMode}</span>
+                        <span>Jenis Hitung</span>
+                        <span className="font-bold capitalize">{calcMode === 'package' ? 'Gorden + Pipa' : calcMode === 'gorden_only' ? 'Gorden Saja' : 'Pipa Saja'}</span>
                     </div>
                     <div className="flex justify-between">
                         <span>Jenis Kain</span>
@@ -373,9 +377,9 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {[
-                                { id: 'paket', label: 'Paket (Gorden + Pipa)', icon: <CheckCircle2 className="h-4 w-4" /> },
-                                { id: 'gorden', label: 'Gorden Saja', icon: <Layers className="h-4 w-4" /> },
-                                { id: 'pipa', label: 'Pipa Saja', icon: <Grid className="h-4 w-4" /> },
+                                { id: 'package', label: 'Paket (Gorden + Pipa)', icon: <CheckCircle2 className="h-4 w-4" /> },
+                                { id: 'gorden_only', label: 'Gorden Saja', icon: <Layers className="h-4 w-4" /> },
+                                { id: 'pipe_only', label: 'Pipa Saja', icon: <Grid className="h-4 w-4" /> },
                             ].map((mode) => (
                                 <button
                                     key={mode.id}
@@ -424,30 +428,30 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                                     )}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm) {window.width && parseFloat(window.width) < 100 && <span className="text-amber-600 font-bold ml-1">(Min 100cm)</span>}</label>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (m) {window.width && parseFloat(window.width) < 1 && <span className="text-amber-600 font-bold ml-1">(Min 1m)</span>}</label>
                                             <div className="relative group">
                                                 <Input
                                                     type="number"
-                                                    placeholder="240"
+                                                    placeholder="2.4"
                                                     className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                     value={window.width}
                                                     onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
                                                 />
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
                                             </div>
                                         </div>
-                                        {calcMode !== 'pipa' && (
+                                        {calcMode !== 'pipe_only' && (
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
                                                 <div className="relative group">
                                                     <Input
                                                         type="number"
-                                                        placeholder="280"
+                                                        placeholder="2.8"
                                                         className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                         value={window.height}
                                                         onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
                                                 </div>
                                             </div>
                                         )}
@@ -458,107 +462,113 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                     </section>
 
                     {/* 2. Pilihan Kain */}
-                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                            <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
-                            <h2 className="font-bold text-slate-900 text-lg">Pilihan Kain</h2>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <button
-                                onClick={() => setFabric("blackout")}
-                                className={cn(
-                                    "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
-                                    fabric === "blackout"
-                                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                        : "bg-white border-slate-100 hover:bg-slate-50"
-                                )}
-                            >
-                                <span className={cn("font-bold text-base sm:text-lg", fabric === "blackout" ? "text-emerald-800" : "text-slate-800")}>Blackout</span>
-                                <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 100% Cahaya</span>
-                                {fabric === "blackout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
-                            </button>
-
-                            <button
-                                onClick={() => setFabric("dimout")}
-                                className={cn(
-                                    "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
-                                    fabric === "dimout"
-                                        ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                        : "bg-white border-slate-100 hover:bg-slate-50"
-                                )}
-                            >
-                                <span className={cn("font-bold text-base sm:text-lg", fabric === "dimout" ? "text-emerald-800" : "text-slate-800")}>Dimout</span>
-                                <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 80% Cahaya</span>
-                                {fabric === "dimout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
-                            </button>
-                        </div>
-
-                        {/* Vitrace Toggle */}
-                        <div className={cn(
-                            "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
-                            useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
-                        )} onClick={() => setUseVitrace(!useVitrace)}>
-                            <div className="flex items-center gap-2.5 sm:gap-4">
-                                <div className={cn(
-                                    "p-2 sm:p-2.5 rounded-xl transition-colors",
-                                    useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
-                                )}>
-                                    <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
-                                </div>
-                                <div>
-                                    <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
-                                    <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
-                                </div>
-                            </div>
-                            <div className={cn(
-                                "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
-                                useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
-                            )}>
-                                <div className={cn(
-                                    "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
-                                    useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
-                                )}></div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* 3. Model & Foto */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Model Gorden */}
+                    {calcMode !== "pipe_only" && (
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                                <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><LinkIcon className="h-5 w-5" /></div>
-                                <h2 className="font-bold text-slate-900 text-lg">Model Gorden</h2>
+                                <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
+                                <h2 className="font-bold text-slate-900 text-lg">Pilihan Kain</h2>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <button
-                                    onClick={() => setModel("smokering")}
+                                    onClick={() => setFabric("blackout")}
                                     className={cn(
-                                        "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300",
-                                        model === "smokering"
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        fabric === "blackout"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
-                                    <Grid className={cn("h-8 w-8", model === "smokering" ? "text-emerald-600" : "text-slate-400")} />
-                                    <span className={cn("text-sm font-bold", model === "smokering" ? "text-emerald-700" : "text-slate-500")}>Smokering</span>
+                                    <span className={cn("font-bold text-base sm:text-lg", fabric === "blackout" ? "text-emerald-800" : "text-slate-800")}>Blackout</span>
+                                    <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 100% Cahaya</span>
+                                    {fabric === "blackout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
 
                                 <button
-                                    onClick={() => setModel("cantel")}
+                                    onClick={() => setFabric("dimout")}
                                     className={cn(
-                                        "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300",
-                                        model === "cantel"
+                                        "h-auto min-h-[4rem] sm:h-24 px-4 sm:px-6 py-3 sm:py-0 rounded-2xl border-2 flex flex-col items-start justify-center gap-1 transition-all duration-300 text-left relative overflow-hidden",
+                                        fabric === "dimout"
                                             ? "bg-emerald-50 border-emerald-500 shadow-sm"
                                             : "bg-white border-slate-100 hover:bg-slate-50"
                                     )}
                                 >
-                                    <LinkIcon className={cn("h-8 w-8", model === "cantel" ? "text-emerald-600" : "text-slate-400")} />
-                                    <span className={cn("text-sm font-bold", model === "cantel" ? "text-emerald-700" : "text-slate-500")}>Cantel</span>
+                                    <span className={cn("font-bold text-base sm:text-lg", fabric === "dimout" ? "text-emerald-800" : "text-slate-800")}>Dimout</span>
+                                    <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">Blokir 80% Cahaya</span>
+                                    {fabric === "dimout" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
                             </div>
+
+                            {/* Vitrace Toggle */}
+                            {calcMode !== "pipe_only" && (
+                                <div className={cn(
+                                    "flex items-center justify-between p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer mt-4",
+                                    useVitrace ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 bg-white hover:border-slate-200"
+                                )} onClick={() => setUseVitrace(!useVitrace)}>
+                                    <div className="flex items-center gap-2.5 sm:gap-4">
+                                        <div className={cn(
+                                            "p-2 sm:p-2.5 rounded-xl transition-colors",
+                                            useVitrace ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
+                                        )}>
+                                            <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-sm sm:text-base text-slate-800 block">Tambahkan Vitrace</span>
+                                            <span className="text-[11px] sm:text-xs text-slate-500">Lapisan tipis tembus pandang untuk siang hari</span>
+                                        </div>
+                                    </div>
+                                    <div className={cn(
+                                        "w-11 h-6 sm:w-14 sm:h-8 rounded-full transition-all duration-300 relative border flex-shrink-0",
+                                        useVitrace ? "bg-emerald-500 border-emerald-600" : "bg-slate-200 border-slate-300"
+                                    )}>
+                                        <div className={cn(
+                                            "absolute top-1/2 -translate-y-1/2 h-4 w-4 sm:h-6 sm:w-6 bg-white rounded-full shadow-sm transition-all duration-300",
+                                            useVitrace ? "left-[calc(100%-18px)] sm:left-[calc(100%-26px)]" : "left-[2px]"
+                                        )}></div>
+                                    </div>
+                                </div>
+                            )}
                         </section>
-                    </div>
+                    )}
+
+                    {/* 3. Model & Foto */}
+                    {calcMode !== "pipe_only" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Model Gorden */}
+                            <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                                    <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><LinkIcon className="h-5 w-5" /></div>
+                                    <h2 className="font-bold text-slate-900 text-lg">Model Gorden</h2>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        onClick={() => setModel("smokering")}
+                                        className={cn(
+                                            "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300",
+                                            model === "smokering"
+                                                ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                                                : "bg-white border-slate-100 hover:bg-slate-50"
+                                        )}
+                                    >
+                                        <Grid className={cn("h-8 w-8", model === "smokering" ? "text-emerald-600" : "text-slate-400")} />
+                                        <span className={cn("text-sm font-bold", model === "smokering" ? "text-emerald-700" : "text-slate-500")}>Smokering</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setModel("cantel")}
+                                        className={cn(
+                                            "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300",
+                                            model === "cantel"
+                                                ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                                                : "bg-white border-slate-100 hover:bg-slate-50"
+                                        )}
+                                    >
+                                        <LinkIcon className={cn("h-8 w-8", model === "cantel" ? "text-emerald-600" : "text-slate-400")} />
+                                        <span className={cn("text-sm font-bold", model === "cantel" ? "text-emerald-700" : "text-slate-500")}>Cantel</span>
+                                    </button>
+                                </div>
+                            </section>
+                        </div>
+                    )}
 
                     {/* 4. Produk Lainnya (Sprei & Bedcover) */}
                     <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
