@@ -114,9 +114,10 @@ export default function OfficeCalculatorPage() {
                 const w_m = w_cm / 100;
                 const h_m = h_cm / 100;
 
-                // Jika lebar < 1m -> dihitung 1m. Volume = lebar hitung x tinggi
+                // Jika lebar atau tinggi < 1m -> dihitung 1m. Volume = lebar hitung x tinggi hitung
                 const wCalculated = Math.max(1, w_m);
-                const area = wCalculated * h_m;
+                const hCalculated = Math.max(1, h_m);
+                const area = wCalculated * hCalculated;
                 return acc + (area * basePackagePrice);
             }
             return acc;

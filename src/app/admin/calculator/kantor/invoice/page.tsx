@@ -249,9 +249,10 @@ function InvoiceContent() {
                                 // Konversi ke Meter untuk hitungan m2
                                 const width_m = width_cm / 100;
                                 const height_m = height_cm / 100;
-                                // Jika lebar < 1m -> dihitung 1m. Volume = lebar hitung x tinggi
+                                // Jika lebar atau tinggi < 1m -> dihitung 1m. Volume = lebar hitung x tinggi hitung
                                 const wCalculated_m = Math.max(1, width_m);
-                                const area = wCalculated_m * height_m;
+                                const hCalculated_m = Math.max(1, height_m);
+                                const area = wCalculated_m * hCalculated_m;
 
                                 return (
                                     <tr key={idx}>

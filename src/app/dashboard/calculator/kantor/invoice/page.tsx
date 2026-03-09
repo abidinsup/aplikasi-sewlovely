@@ -196,7 +196,7 @@ function InvoiceContent() {
                             {data.windows.map((w: any, idx: number) => {
                                 const width = Number(w.width) || 0;
                                 const height = Number(w.height) || 0;
-                                const area = Math.max(1, width * height);
+                                const area = Math.max(1, width) * Math.max(1, height);
 
                                 return (
                                     <tr key={idx}>
