@@ -246,7 +246,9 @@ function InvoiceContent() {
                             {data.windows.map((w: any, idx: number) => {
                                 const width = Number(w.width) || 0;
                                 const height = Number(w.height) || 0;
-                                const area = Math.max(1, width * height);
+                                // Jika lebar < 1m -> dihitung 1m. Volume = lebar hitung x tinggi
+                                const wCalculated = Math.max(1, width);
+                                const area = wCalculated * height;
 
                                 return (
                                     <tr key={idx}>

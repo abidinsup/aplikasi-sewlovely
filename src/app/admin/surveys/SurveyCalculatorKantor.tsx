@@ -123,8 +123,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
             if (w > 0 && h > 0) {
-                // Min charge 1m2 per window
-                const area = Math.max(1, w * h);
+                // Jika lebar < 1m -> dihitung 1m. Volume = lebar hitung x tinggi
+                const wCalculated = Math.max(1, w);
+                const area = wCalculated * h;
                 return acc + (area * basePackagePrice);
             }
             return acc;
