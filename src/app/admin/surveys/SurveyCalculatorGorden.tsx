@@ -38,9 +38,11 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     const [surveyTime] = React.useState<string | null>(survey.survey_time);
     const [fabric, setFabric] = React.useState<"blackout" | "dimout">("blackout");
     const [useVitrace, setUseVitrace] = React.useState(false);
+    const [calcMode, setCalcMode] = React.useState<"paket" | "gorden" | "pipa">("paket");
     const [model, setModel] = React.useState<"smokering" | "cantel">("smokering");
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
+    const [pipaPrice, setPipaPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
 
     // Other Items State
@@ -145,10 +147,16 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
             return;
         }
 
-        // Validate no zero values (only for windows)
-        const hasZeroValues = windows.some(w => parseFloat(w.width) <= 0 || parseFloat(w.height) <= 0);
+        // Validate no zero values (only for width, and height if not pipa mode)
+        const hasZeroValues = windows.some(w => {
+            const wVal = parseFloat(w.width);
+            const hVal = parseFloat(w.height);
+            if (calcMode === "pipa") return wVal <= 0;
+            return wVal <= 0 || hVal <= 0;
+        });
+
         if (hasZeroValues) {
-            toast.error("Lebar dan tinggi jendela harus lebih dari 0");
+            toast.error(calcMode === "pipa" ? "Lebar harus lebih dari 0" : "Lebar dan tinggi harus lebih dari 0");
             return;
         }
 
@@ -164,10 +172,12 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
             windows,
             motifCode,
             fabric,
+            calcMode,
             useVitrace,
             model,
             totalPrice,
             unitPrice,
+            pipaPrice,
             surveyDate,
             surveyTime,
             partner_id: survey.partner_id, // Link to partner
@@ -186,21 +196,34 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     React.useEffect(() => {
         if (prices.length === 0) return;
 
-        const packageBlackout = prices.find(p => p.name.toUpperCase().includes("BLACKOUT"))?.price || 0;
-        const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
-        const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
+        // Get prices from database with fallback matching
+        const blackoutPrice = prices.find(p => p.name === "Gorden Blackout")?.price || 0;
+        const dimoutPrice = prices.find(p => p.name === "Gorden Dimout")?.price || 0;
+        const vitracePrice = prices.find(p => p.name === "Vitrace")?.price || 0;
+        const pipaPrice = prices.find(p => p.name === "Pipa Gorden" || p.name === "Pipa Complete")?.price || 0;
 
-        let basePackagePrice = fabric === "blackout" ? packageBlackout : packageDimout;
-        let vitracePrice = useVitrace ? packageVitrace : 0;
+        const currentGordenPrice = fabric === "blackout" ? blackoutPrice : dimoutPrice;
+        const currentVitracePrice = useVitrace ? vitracePrice : 0;
 
         const windowsTotal = windows.reduce((acc, curr) => {
-            const w = Number(curr.width) || 0;
-            const h = Number(curr.height) || 0;
-            if (w > 0 && h > 0) {
-                const area = Math.max(1, w * h);
-                const pricePerArea = basePackagePrice + vitracePrice;
-                if (pricePerArea !== unitPrice) setUnitPrice(pricePerArea);
-                return acc + (area * pricePerArea);
+            const rawW = Number(curr.width) || 0;
+            const rawH = Number(curr.height) || 0;
+
+            if (rawW > 0) {
+                // Rules: Min Width 100cm (1m), Volume = W/100 x H/100
+                const w = Math.max(100, rawW) / 100;
+                const h = rawH / 100;
+
+                let itemTotal = 0;
+                if (calcMode === "paket") {
+                    itemTotal = (w * h * (currentGordenPrice + currentVitracePrice)) + (w * pipaPrice);
+                } else if (calcMode === "gorden") {
+                    itemTotal = (w * h * (currentGordenPrice + currentVitracePrice));
+                } else if (calcMode === "pipa") {
+                    itemTotal = (w * pipaPrice);
+                }
+
+                return acc + itemTotal;
             }
             return acc;
         }, 0);
@@ -210,7 +233,10 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         }, 0);
 
         setTotalPrice(windowsTotal + otherItemsTotal);
-    }, [windows, fabric, useVitrace, prices, otherItems]);
+        // Set unit price for reference (Gorden + Vitrace)
+        setUnitPrice(currentGordenPrice + currentVitracePrice);
+        setPipaPrice(pipaPrice);
+    }, [windows, fabric, useVitrace, prices, otherItems, calcMode]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -235,8 +261,12 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                         <span className="font-bold">{windows.length} Set</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Jenis Paket</span>
-                        <span className="font-bold capitalize">{fabric} + Pipa</span>
+                        <span>Jenis Pesanan</span>
+                        <span className="font-bold uppercase">{calcMode}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>Jenis Kain</span>
+                        <span className="font-bold capitalize">{fabric}</span>
                     </div>
                     <div className="flex justify-between">
                         <span>Model</span>
@@ -335,6 +365,40 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                         </div>
                     </section>
 
+                    {/* Mode Pesanan */}
+                    <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                            <div className="p-2 bg-blue-100 rounded-lg text-blue-600"><Layers className="h-5 w-5" /></div>
+                            <h2 className="font-bold text-slate-900 text-lg">Mode Pesanan</h2>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                                { id: 'paket', label: 'Paket (Gorden + Pipa)', icon: <CheckCircle2 className="h-4 w-4" /> },
+                                { id: 'gorden', label: 'Gorden Saja', icon: <Layers className="h-4 w-4" /> },
+                                { id: 'pipa', label: 'Pipa Saja', icon: <Grid className="h-4 w-4" /> },
+                            ].map((mode) => (
+                                <button
+                                    key={mode.id}
+                                    onClick={() => setCalcMode(mode.id as any)}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 text-center",
+                                        calcMode === mode.id
+                                            ? "bg-blue-50 border-blue-500 text-blue-700 shadow-sm"
+                                            : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "p-2 rounded-xl",
+                                        calcMode === mode.id ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-400"
+                                    )}>
+                                        {mode.icon}
+                                    </div>
+                                    <span className="text-xs font-bold uppercase tracking-wider">{mode.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+
                     {/* 1. Ukuran Jendela */}
                     <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
@@ -360,31 +424,33 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                                     )}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (m)</label>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm) {window.width && parseFloat(window.width) < 100 && <span className="text-amber-600 font-bold ml-1">(Min 100cm)</span>}</label>
                                             <div className="relative group">
                                                 <Input
                                                     type="number"
-                                                    placeholder="2.4"
+                                                    placeholder="240"
                                                     className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                     value={window.width}
                                                     onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
                                                 />
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
-                                            <div className="relative group">
-                                                <Input
-                                                    type="number"
-                                                    placeholder="2.8"
-                                                    className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
-                                                    value={window.height}
-                                                    onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
-                                                />
-                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                        {calcMode !== 'pipa' && (
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
+                                                <div className="relative group">
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="280"
+                                                        className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
+                                                        value={window.height}
+                                                        onChange={(e) => updateWindow(window.id, 'height', e.target.value)}
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
