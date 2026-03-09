@@ -107,12 +107,16 @@ export default function OfficeCalculatorPage() {
         setUnitPrice(basePackagePrice);
 
         const totalCalculated = windows.reduce((acc, curr) => {
-            const w = Number(curr.width) || 0;
-            const h = Number(curr.height) || 0;
-            if (w > 0 && h > 0) {
+            const w_cm = Number(curr.width) || 0;
+            const h_cm = Number(curr.height) || 0;
+            if (w_cm > 0 && h_cm > 0) {
+                // Konversi ke Meter untuk hitungan harga per m2
+                const w_m = w_cm / 100;
+                const h_m = h_cm / 100;
+
                 // Jika lebar < 1m -> dihitung 1m. Volume = lebar hitung x tinggi
-                const wCalculated = Math.max(1, w);
-                const area = wCalculated * h;
+                const wCalculated = Math.max(1, w_m);
+                const area = wCalculated * h_m;
                 return acc + (area * basePackagePrice);
             }
             return acc;
@@ -248,24 +252,24 @@ export default function OfficeCalculatorPage() {
                                         )}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (m)</label>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm)</label>
                                                 <div className="relative group">
                                                     <Input
                                                         type="number"
-                                                        placeholder="2.0"
+                                                        placeholder="100"
                                                         className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                         value={window.width}
                                                         onChange={(e) => updateWindow(window.id, 'width', e.target.value)}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">meter</span>
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (m)</label>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
                                                 <div className="relative group">
                                                     <Input
                                                         type="number"
-                                                        placeholder="1.5"
+                                                        placeholder="150"
                                                         className="h-14 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 text-center text-xl font-bold text-slate-700 rounded-2xl group-hover:bg-white group-hover:border-emerald-200 transition-all [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-200"
                                                         value={window.height}
                                                         onChange={(e) => updateWindow(window.id, 'height', e.target.value)}

@@ -244,11 +244,14 @@ function InvoiceContent() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {data.windows.map((w: any, idx: number) => {
-                                const width = Number(w.width) || 0;
-                                const height = Number(w.height) || 0;
+                                const width_cm = Number(w.width) || 0;
+                                const height_cm = Number(w.height) || 0;
+                                // Konversi ke Meter untuk hitungan m2
+                                const width_m = width_cm / 100;
+                                const height_m = height_cm / 100;
                                 // Jika lebar < 1m -> dihitung 1m. Volume = lebar hitung x tinggi
-                                const wCalculated = Math.max(1, width);
-                                const area = wCalculated * height;
+                                const wCalculated_m = Math.max(1, width_m);
+                                const area = wCalculated_m * height_m;
 
                                 return (
                                     <tr key={idx}>
@@ -260,7 +263,7 @@ function InvoiceContent() {
                                             </div>
                                         </td>
                                         <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                            {w.width}m x {w.height}m
+                                            {w.width}cm x {w.height}cm
                                         </td>
                                         <td className="py-4 text-sm text-right font-bold text-slate-900">
                                             Rp {(area * (data.unitPrice || 0)).toLocaleString("id-ID")}
