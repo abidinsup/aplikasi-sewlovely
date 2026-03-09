@@ -58,12 +58,12 @@ const LogoutSuccessModal: React.FC<LogoutSuccessModalProps> = ({
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    {/* Backdrop with Soft Blur */}
+                    {/* Backdrop with Heavy Blur & Darkness */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-slate-400/20 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
                     />
 
                     {/* Modal Content - Match Logout Design */}

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, CheckCircle2, ShieldCheck, UserCircle2, UserCheck } from "lucide-react";
+import { Crown, CheckCircle2, ShieldCheck, UserCircle2 } from "lucide-react";
 
 interface LoginSuccessModalProps {
     isOpen: boolean;
@@ -18,8 +19,10 @@ const LoginSuccessModal: React.FC<LoginSuccessModalProps> = ({
     role,
 }) => {
     const [progress, setProgress] = useState(0);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         if (isOpen) {
             setProgress(0);
             const timer = setInterval(() => {
@@ -65,29 +68,31 @@ const LoginSuccessModal: React.FC<LoginSuccessModalProps> = ({
         }
     };
 
-    return (
+    if (!mounted) return null;
+
+    const modalContent = (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    {/* Backdrop with Soft Blur */}
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden">
+                    {/* Backdrop with Heavy Blur & Darkness */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-slate-400/20 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
                     />
 
-                    {/* Modal Content - Styled like the screenshot */}
+                    {/* Modal Content - Center Focused */}
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0, y: 40 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="relative w-full max-w-sm overflow-hidden rounded-[3rem] bg-white p-10 text-center shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border border-slate-100"
+                        className="relative w-full max-w-sm overflow-hidden rounded-[3rem] bg-white p-10 text-center shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-white/20"
                     >
                         <div className="relative z-10 flex flex-col items-center">
 
-                            {/* Icon Container with Shadow and Crown */}
+                            {/* Icon Container */}
                             <div className="relative mb-8">
                                 <motion.div
                                     initial={{ rotate: -10, scale: 0.5 }}
@@ -169,6 +174,8 @@ const LoginSuccessModal: React.FC<LoginSuccessModalProps> = ({
             )}
         </AnimatePresence>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 export default LoginSuccessModal;
