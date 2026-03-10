@@ -112,9 +112,7 @@ function InvoiceContent() {
                 payment_status: 'pending',
                 survey_id: data.survey_id || null, // Add survey_id
                 details: {
-                    fabricType: data.fabricType,
-                    railType: data.railType,
-                    windows: data.windows,
+                    savedItems: data.savedItems, // Store everything
                     unitPrice: data.unitPrice,
                     affiliateCode: data.affiliateCode,
                     kodeGordenPhoto: data.kodeGordenPhoto,
@@ -242,37 +240,61 @@ function InvoiceContent() {
                                 windows: data.windows,
                                 fabricType: data.fabricType,
                                 railType: data.railType,
-                                unitPrice: data.unitPrice,
+                                fabricPrice: data.fabricPrice,
+                                railPrice: data.railPrice,
+                                useConnectingPipe: data.useConnectingPipe,
+                                pipePrice: data.pipePrice,
+                                pipeName: data.pipeName,
                                 productName: "Paket Gorden RS"
                             }] : [])).map((group: any, groupIdx: number) => (
                                 <React.Fragment key={groupIdx}>
                                     {group.windows?.map((w: any, windowIdx: number) => {
                                         const width = Number(w.width) || 0;
                                         const height = Number(w.height) || 0;
-
                                         const wCalculated = Math.max(1, width);
-                                        const multiplier = Math.ceil(height / 2.8);
-                                        const totalItemPrice = wCalculated * (group.unitPrice || 0) * multiplier;
+                                        const panels = Math.ceil(height / 2.8);
+                                        const fabricNeeded = wCalculated * 1.5;
+                                        const pipesCount = Math.ceil(wCalculated / 1);
+
+                                        const fPrice = group.fabricPrice || 0;
+                                        const rPrice = group.railPrice || 0;
+                                        const pPrice = group.pipePrice || 0;
+
+                                        const windowFabricTotal = wCalculated * fPrice * panels;
+                                        const windowRailTotal = wCalculated * rPrice;
+                                        const windowPipeTotal = group.useConnectingPipe ? pipesCount * pPrice : 0;
+                                        const totalItemPrice = windowFabricTotal + windowRailTotal + windowPipeTotal;
 
                                         return (
-                                            <tr key={`${groupIdx}-${windowIdx}`}>
-                                                <td className="py-4 text-sm font-medium text-slate-400">
+                                            <tr key={`${groupIdx}-${windowIdx}`} className="border-b border-slate-50">
+                                                <td className="py-6 text-sm font-medium text-slate-400 align-top">
                                                     {windowIdx === 0 ? groupIdx + 1 : ""}
                                                 </td>
-                                                <td className="py-4">
+                                                <td className="py-6">
                                                     <p className="font-bold text-slate-900">{group.productName || "Paket Gorden RS"} (Jendela {windowIdx + 1})</p>
-                                                    <div className="text-xs text-slate-500 mt-1 space-y-0.5">
-                                                        <p>Kain: <span className="capitalize font-semibold">{group.fabricType === 'antibakteri' ? 'Anti Bakteri (Polyester)' : 'Anti Darah (PVC)'}</span></p>
-                                                        <p>Rel: <span className="capitalize font-semibold">{group.railType === 'flexy' ? 'Flexy' : 'Standar'}</span></p>
-                                                        <p className="font-medium text-emerald-600">Terhitung Paket (Bahan + Rel + Pasang)</p>
-                                                        <p>Kerut 1.5x</p>
-                                                        {multiplier > 1 && <p className="text-amber-600">Belah Kain X{multiplier} (Tinggi melebihi 2.8m)</p>}
+                                                    <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-[11px] text-slate-500 mt-2">
+                                                        <p>Lebar Rel: <span className="font-semibold text-slate-700">{width} m</span></p>
+                                                        <p>Tinggi Gorden: <span className="font-semibold text-slate-700">{height} m</span></p>
+                                                        <p>Harga Kain/m: <span className="font-semibold text-slate-700 text-[10px]">Rp {fPrice.toLocaleString()}</span></p>
+                                                        <p>Harga Rel/m: <span className="font-semibold text-slate-700 text-[10px]">Rp {rPrice.toLocaleString()}</span></p>
+                                                        <p>Harga Paket/m: <span className="font-semibold text-emerald-600 text-[10px]">Rp {(fPrice + rPrice).toLocaleString()}</span></p>
+                                                        <p>Kebutuhan Kain: <span className="font-semibold text-slate-700">{fabricNeeded.toFixed(1)} m (x1.5)</span></p>
+                                                        <p>Jumlah Panel: <span className="font-bold text-slate-900">{panels} Panel</span></p>
+                                                        {group.useConnectingPipe ? (
+                                                            <>
+                                                                <p className="text-blue-600 font-bold">Pipe: {group.pipeName.split('Pipe ')[1]}</p>
+                                                                <p>Qty Pipe: <span className="font-bold text-blue-600">{pipesCount} Pcs</span></p>
+                                                                <p>Harga Pipe: <span className="font-semibold text-slate-700 text-[10px]">Rp {pPrice.toLocaleString()}</span></p>
+                                                            </>
+                                                        ) : (
+                                                            <p>Connecting Pipe: <span className="text-slate-400 italic">Tidak</span></p>
+                                                        )}
                                                     </div>
                                                 </td>
-                                                <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                                    {w.width}m L x {w.height}m T
+                                                <td className="py-6 text-sm text-center font-medium text-slate-700 align-top">
+                                                    {w.width}m x {w.height}m
                                                 </td>
-                                                <td className="py-4 text-sm text-right font-bold text-slate-900">
+                                                <td className="py-6 text-sm text-right font-bold text-slate-900 align-top">
                                                     Rp {totalItemPrice.toLocaleString("id-ID")}
                                                 </td>
                                             </tr>

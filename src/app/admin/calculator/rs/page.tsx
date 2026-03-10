@@ -27,6 +27,10 @@ export default function HospitalCalculatorPage() {
     const [motifGordenPreview, setMotifGordenPreview] = React.useState<string | null>(null);
     const [savedItems, setSavedItems] = React.useState<any[]>([]);
 
+    // Connecting Pipe State
+    const [useConnectingPipe, setUseConnectingPipe] = React.useState(false);
+    const [selectedPipeId, setSelectedPipeId] = React.useState<number | null>(null);
+
     React.useEffect(() => {
         const fetchPrices = async () => {
             const result = await getProducts();
@@ -65,20 +69,33 @@ export default function HospitalCalculatorPage() {
             return;
         }
 
+        const hospitalProducts = prices.filter(p => p.category === "Hospital");
+        const fabricProduct = hospitalProducts.find(p =>
+            fabricType === "antibakteri" ? p.name.toUpperCase().includes("ANTI BAKTERI") : p.name.toUpperCase().includes("ANTI DARAH")
+        );
+        const railProduct = hospitalProducts.find(p =>
+            railType === "flexy" ? p.name.toUpperCase().includes("REL FLEXY") : p.name.toUpperCase().includes("REL STANDAR")
+        );
+        const pipeProduct = selectedPipeId ? hospitalProducts.find(p => p.id === selectedPipeId) : null;
+
+        const fPrice = fabricProduct?.price || 0;
+        const rPrice = railProduct?.price || 0;
+        const pPrice = pipeProduct?.price || 0;
+
         const currentWindowsTotal = windows.reduce((acc, curr) => {
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
 
             if (w > 0 && h > 0) {
                 const wCalculated = Math.max(1, w);
+                const panels = Math.ceil(h / 2.8);
+                const pipesCount = Math.ceil(wCalculated / 1);
 
-                // Tambahan pemakaian kain kerut 1.5x
-                const kainNeeded = wCalculated * 1.5;
+                const windowFabricTotal = wCalculated * fPrice * panels;
+                const windowRailTotal = wCalculated * rPrice;
+                const windowPipeTotal = useConnectingPipe ? pipesCount * pPrice : 0;
 
-                // Tinggi standar pabrik 2.8m. Jika tinggi > 2.8m butuh sambungan kain (beli double lebar).
-                const multiplier = Math.ceil(h / 2.8);
-
-                return acc + (wCalculated * unitPrice * multiplier);
+                return acc + windowFabricTotal + windowRailTotal + windowPipeTotal;
             }
             return acc;
         }, 0);
@@ -89,12 +106,18 @@ export default function HospitalCalculatorPage() {
             windows: [...windows],
             fabricType,
             railType,
-            unitPrice,
+            fabricPrice: fPrice,
+            railPrice: rPrice,
+            useConnectingPipe,
+            pipePrice: pPrice,
+            pipeName: pipeProduct?.name || "",
             itemTotalPrice: currentWindowsTotal
         };
 
         setSavedItems([...savedItems, newItem]);
         setWindows([{ id: Date.now(), width: "", height: "" }]);
+        setUseConnectingPipe(false);
+        setSelectedPipeId(null);
         toast.success("Berhasil ditambah ke daftar!");
     };
 
@@ -122,14 +145,33 @@ export default function HospitalCalculatorPage() {
                 return;
             }
 
+            const hospitalProducts = prices.filter(p => p.category === "Hospital");
+            const fabricProduct = hospitalProducts.find(p =>
+                fabricType === "antibakteri" ? p.name.toUpperCase().includes("ANTI BAKTERI") : p.name.toUpperCase().includes("ANTI DARAH")
+            );
+            const railProduct = hospitalProducts.find(p =>
+                railType === "flexy" ? p.name.toUpperCase().includes("REL FLEXY") : p.name.toUpperCase().includes("REL STANDAR")
+            );
+            const pipeProduct = selectedPipeId ? hospitalProducts.find(p => p.id === selectedPipeId) : null;
+
+            const fPrice = fabricProduct?.price || 0;
+            const rPrice = railProduct?.price || 0;
+            const pPrice = pipeProduct?.price || 0;
+
             const currentWindowsTotal = windows.reduce((acc, curr) => {
                 const w = Number(curr.width) || 0;
                 const h = Number(curr.height) || 0;
 
                 if (w > 0 && h > 0) {
                     const wCalculated = Math.max(1, w);
-                    const multiplier = Math.ceil(h / 2.8);
-                    return acc + (wCalculated * unitPrice * multiplier);
+                    const panels = Math.ceil(h / 2.8);
+                    const pipesCount = Math.ceil(wCalculated / 1);
+
+                    const windowFabricTotal = wCalculated * fPrice * panels;
+                    const windowRailTotal = wCalculated * rPrice;
+                    const windowPipeTotal = useConnectingPipe ? pipesCount * pPrice : 0;
+
+                    return acc + windowFabricTotal + windowRailTotal + windowPipeTotal;
                 }
                 return acc;
             }, 0);
@@ -140,7 +182,11 @@ export default function HospitalCalculatorPage() {
                 windows: [...windows],
                 fabricType,
                 railType,
-                unitPrice,
+                fabricPrice: fPrice,
+                railPrice: rPrice,
+                useConnectingPipe,
+                pipePrice: pPrice,
+                pipeName: pipeProduct?.name || "",
                 itemTotalPrice: currentWindowsTotal
             });
         }
@@ -178,36 +224,40 @@ export default function HospitalCalculatorPage() {
         if (prices.length === 0) return;
 
         const hospitalProducts = prices.filter(p => p.category === "Hospital");
-        const packageAntiBakteri = hospitalProducts.find(p => p.name.toUpperCase().includes("ANTI BAKTERI"))?.price || 0;
-        const packageAntiDarah = hospitalProducts.find(p => p.name.toUpperCase().includes("ANTI DARAH"))?.price || 0;
-        const packageRelFlexy = hospitalProducts.find(p => p.name.toUpperCase().includes("REL FLEXY"))?.price || 0;
-        const packageRelStandard = hospitalProducts.find(p => p.name.toUpperCase().includes("REL STANDAR") || p.name.toUpperCase().includes("REL STANDARD"))?.price || 0;
+        const fabricProduct = hospitalProducts.find(p =>
+            fabricType === "antibakteri" ? p.name.toUpperCase().includes("ANTI BAKTERI") : p.name.toUpperCase().includes("ANTI DARAH")
+        );
+        const railProduct = hospitalProducts.find(p =>
+            railType === "flexy" ? p.name.toUpperCase().includes("REL FLEXY") : p.name.toUpperCase().includes("REL STANDAR")
+        );
+        const pipeProduct = selectedPipeId ? hospitalProducts.find(p => p.id === selectedPipeId) : null;
 
-        let fabricPrice = fabricType === "antibakteri" ? packageAntiBakteri : packageAntiDarah;
-        let railPrice = railType === "flexy" ? packageRelFlexy : packageRelStandard;
-
-        const basePackagePrice = fabricPrice + railPrice;
-        setUnitPrice(basePackagePrice);
+        const fPrice = fabricProduct?.price || 0;
+        const rPrice = railProduct?.price || 0;
+        const pPrice = pipeProduct?.price || 0;
 
         const totalCalculated = windows.reduce((acc, curr) => {
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
             if (w > 0 && h > 0) {
-                // Min charge lebar 1 meter
                 const wCalculated = Math.max(1, w);
+                const panels = Math.ceil(h / 2.8);
+                const pipesCount = Math.ceil(wCalculated / 1);
 
-                // Pemakaian bahan: (Harga Kain + Rel) dihitung per meter lebar
-                // Tinggi memakan bahan extra jika > 2.8m, butuh penyambungan (artinya belanja kain x2 / x3)
-                const multiplier = Math.ceil(h / 2.8);
+                const windowFabricTotal = wCalculated * fPrice * panels;
+                const windowRailTotal = wCalculated * rPrice;
+                const windowPipeTotal = useConnectingPipe ? pipesCount * pPrice : 0;
 
-                return acc + (wCalculated * basePackagePrice * multiplier);
+                return acc + windowFabricTotal + windowRailTotal + windowPipeTotal;
             }
             return acc;
         }, 0);
 
+        setUnitPrice(fPrice + rPrice);
+
         const savedTotal = savedItems.reduce((acc, item) => acc + item.itemTotalPrice, 0);
         setTotalPrice(totalCalculated + savedTotal);
-    }, [windows, fabricType, railType, prices, savedItems]);
+    }, [windows, fabricType, railType, prices, savedItems, useConnectingPipe, selectedPipeId]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -226,18 +276,50 @@ export default function HospitalCalculatorPage() {
                     </div>
                 </div>
 
-                <div className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
-                    <div className="flex justify-between">
-                        <span>Jenis Paket</span>
-                        <span className="font-bold capitalize">{fabricType} + Rel</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Jenis Kain</span>
-                        <span className="font-bold capitalize">{fabricType === 'antibakteri' ? 'Anti Bakteri (Polyester)' : 'Anti Darah (PVC)'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Tipe Rel</span>
-                        <span className="font-bold capitalize">{railType === 'flexy' ? 'Rel Flexy' : 'Rel Standar'}</span>
+                <div className="space-y-4 text-[11px] text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
+                    <div className="space-y-2">
+                        <div className="flex justify-between font-bold text-slate-900 border-b pb-1 mb-1">
+                            <span>Detail Bidang Saat Ini</span>
+                        </div>
+                        {windows.map((w, idx) => {
+                            const width = Number(w.width) || 0;
+                            const height = Number(w.height) || 0;
+                            const wCalc = Math.max(1, width);
+                            const panels = Math.ceil(height / 2.8);
+                            const fabricNeeded = wCalc * 1.5 * panels;
+
+                            return (
+                                <div key={idx} className="space-y-1 pb-2 border-b border-slate-200 last:border-0">
+                                    <div className="flex justify-between font-medium">
+                                        <span>Bidang {idx + 1}: {width}m x {height}m</span>
+                                        <span className="text-emerald-600">{panels} Panel</span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] text-slate-400">
+                                        <span>Kebutuhan Kain (1.5x)</span>
+                                        <span>{fabricNeeded.toFixed(1)} m</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        <div className="flex justify-between pt-1">
+                            <span>Harga Kain/m</span>
+                            <span className="font-bold">Rp {((prices.find(p => fabricType === "antibakteri" ? p.name.includes("Bakteri") : p.name.includes("Darah"))?.price) || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Harga Rel/m</span>
+                            <span className="font-bold">Rp {((prices.find(p => railType === "flexy" ? p.name.includes("Flexy") : p.name.includes("Standar"))?.price) || 0).toLocaleString()}</span>
+                        </div>
+                        {useConnectingPipe && (
+                            <div className="flex justify-between text-blue-600">
+                                <span>Pipa ({prices.find(p => p.id === selectedPipeId)?.name.split('Pipe ')[1]})</span>
+                                <span className="font-bold">Rp {(prices.find(p => p.id === selectedPipeId)?.price || 0).toLocaleString()}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between pt-1 border-t border-dashed border-slate-300">
+                            <span>Harga Paket/m</span>
+                            <span className="font-bold text-slate-900">Rp {(unitPrice).toLocaleString()}</span>
+                        </div>
                     </div>
 
                     {savedItems.length > 0 && (
@@ -451,7 +533,7 @@ export default function HospitalCalculatorPage() {
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
                                 <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><Layers className="h-5 w-5" /></div>
-                                <h2 className="font-bold text-slate-900 text-lg">Pilihan Rel</h2>
+                                <h2 className="font-bold text-slate-900 text-lg">Pilihan Rel & Aksesoris</h2>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <button
@@ -481,6 +563,48 @@ export default function HospitalCalculatorPage() {
                                     <span className="text-[10px] sm:text-xs font-medium text-slate-500">Lurus & Kokoh</span>
                                     {railType === "standar" && <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 text-emerald-500"><CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" /></div>}
                                 </button>
+                            </div>
+
+                            {/* Connecting Pipe Sub-section */}
+                            <div className="mt-6 pt-6 border-t border-slate-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-8 w-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-bold text-xs">P</div>
+                                        <h3 className="font-bold text-slate-800 text-sm">Connecting Pipe (Opsional)</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setUseConnectingPipe(!useConnectingPipe)}
+                                        className={cn(
+                                            "px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all",
+                                            useConnectingPipe ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
+                                        )}
+                                    >
+                                        {useConnectingPipe ? "Aktif" : "Gunakan Pipe"}
+                                    </button>
+                                </div>
+
+                                {useConnectingPipe && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {prices.filter(p => p.name.includes("Connecting Pipe")).map((pipe) => {
+                                            const label = pipe.name.split('Pipe ')[1];
+                                            return (
+                                                <button
+                                                    key={pipe.id}
+                                                    onClick={() => setSelectedPipeId(pipe.id)}
+                                                    className={cn(
+                                                        "p-3 rounded-xl border-2 text-left transition-all",
+                                                        selectedPipeId === pipe.id
+                                                            ? "bg-blue-50 border-blue-500"
+                                                            : "bg-white border-slate-100 hover:bg-slate-50"
+                                                    )}
+                                                >
+                                                    <p className="font-bold text-slate-800 text-xs">{label}</p>
+                                                    <p className="text-[10px] text-slate-500">Rp {pipe.price.toLocaleString()}</p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </section>
 
