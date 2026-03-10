@@ -44,6 +44,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     const [unitPrice, setUnitPrice] = React.useState(0);
     const [pipaPrice, setPipaPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
+    const [savedItems, setSavedItems] = React.useState<any[]>([]);
 
     // Other Items State
     const [otherItems, setOtherItems] = React.useState<OtherItem[]>([]);
@@ -107,6 +108,57 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         setOtherItems(otherItems.map(item => item.id === id ? { ...item, [field]: value } : item));
     };
 
+    const addItemToList = () => {
+        const areWindowsComplete = windows.every(w => w.width && w.height);
+        if (!areWindowsComplete) {
+            toast.warning("Mohon lengkapi ukuran jendela dahulu");
+            return;
+        }
+
+        const currentWindowsTotal = windows.reduce((acc, curr) => {
+            const w = (Number(curr.width) || 0) / 100;
+            const h = (Number(curr.height) || 0) / 100;
+            if (calcMode === "pipe_only" || calcMode === "rail_only") {
+                return acc + (Math.max(1, w) * unitPrice);
+            } else {
+                return acc + (Math.max(1, w * h) * unitPrice);
+            }
+        }, 0);
+
+        if (currentWindowsTotal <= 0) {
+            toast.error("Gagal menghitung harga. Cek kembali ukuran jendela.");
+            return;
+        }
+
+        let itemLabel = "Gorden Rumah";
+        if (calcMode === "package") itemLabel = "Paket Gorden + Pipa";
+        else if (calcMode === "gorden_only") itemLabel = "Gorden Saja";
+        else if (calcMode === "pipe_only") itemLabel = "Pipa Saja";
+        else if (calcMode === "rail_only") itemLabel = "Rel Saja";
+
+        const newItem = {
+            id: Date.now().toString(),
+            productName: `${itemLabel} (${fabric.toUpperCase()})`,
+            windows: [...windows],
+            fabric,
+            calcMode,
+            useVitrace,
+            model,
+            motifCode,
+            unitPrice,
+            itemTotalPrice: currentWindowsTotal
+        };
+
+        setSavedItems([...savedItems, newItem]);
+        setWindows([{ id: Date.now(), width: "", height: "" }]);
+        setMotifCode("");
+        toast.success("Berhasil ditambah ke daftar!");
+    };
+
+    const removeItemFromList = (id: string) => {
+        setSavedItems(savedItems.filter(item => item.id !== id));
+    };
+
     const [isUpdatingCustomer, setIsUpdatingCustomer] = React.useState(false);
 
     const handleUpdateCustomer = async () => {
@@ -138,57 +190,67 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     };
 
     const handleCreateInvoice = async () => {
-        // Validation
         const isCustomerInfoComplete = customerInfo.name && customerInfo.phone && customerInfo.address;
-        const areWindowsComplete = windows.every(w => w.width && w.height);
-
-        if (!isCustomerInfoComplete || !areWindowsComplete) {
-            toast.warning("Mohon semua data dilengkapi");
+        if (!isCustomerInfoComplete) {
+            toast.warning("Mohon lengkapi data pemesan");
             return;
         }
 
-        // Validate no zero values (only for width, and height if not pipe mode)
-        const hasZeroValues = windows.some(w => {
-            const wVal = parseFloat(w.width);
-            const hVal = parseFloat(w.height);
-            if (calcMode === "pipe_only" || calcMode === "rail_only") return wVal <= 0;
-            return wVal <= 0 || hVal <= 0;
-        });
+        let finalItems = [...savedItems];
+        const areCurrentWindowsComplete = windows.some(w => w.width && w.height);
 
-        if (hasZeroValues) {
-            toast.error((calcMode === "pipe_only" || calcMode === "rail_only") ? "Lebar harus lebih dari 0" : "Lebar dan tinggi harus lebih dari 0");
-            return;
+        // If pending input, add it
+        if (areCurrentWindowsComplete && windows.every(w => w.width && w.height)) {
+            const currentWindowsTotal = windows.reduce((acc, curr) => {
+                const w = (Number(curr.width) || 0) / 100;
+                const h = (Number(curr.height) || 0) / 100;
+                if (calcMode === "pipe_only" || calcMode === "rail_only") {
+                    return acc + (Math.max(1, w) * unitPrice);
+                } else {
+                    return acc + (Math.max(1, w * h) * unitPrice);
+                }
+            }, 0);
+
+            let itemLabel = "Gorden Rumah";
+            if (calcMode === "package") itemLabel = "Paket Gorden + Pipa";
+            else if (calcMode === "gorden_only") itemLabel = "Gorden Saja";
+            else if (calcMode === "pipe_only") itemLabel = "Pipa Saja";
+            else if (calcMode === "rail_only") itemLabel = "Rel Saja";
+
+            finalItems.push({
+                id: "current-" + Date.now(),
+                productName: `${itemLabel} (${fabric.toUpperCase()})`,
+                windows: [...windows],
+                fabric,
+                calcMode,
+                useVitrace,
+                model,
+                motifCode,
+                unitPrice,
+                itemTotalPrice: currentWindowsTotal
+            });
         }
 
-        // Validate total price is not zero
-        if (totalPrice <= 0) {
-            toast.error("Total harga tidak boleh Rp 0. Pastikan ukuran jendela sudah benar.");
+        if (finalItems.length === 0 && otherItems.length === 0) {
+            toast.warning("Daftar pesanan masih kosong. Gunakan tombol 'Simpan ke Daftar'.");
             return;
         }
 
         // Create Invoice Data
         const orderData = {
             customerInfo,
-            windows,
-            motifCode,
-            fabric,
-            calcMode,
-            useVitrace,
-            model,
+            savedItems: finalItems,
             totalPrice,
-            unitPrice,
-            pipaPrice,
             surveyDate,
             surveyTime,
-            partner_id: survey.partner_id, // Link to partner
+            partner_id: survey.partner_id,
             affiliateCode: survey.partner_id ? "PARTNER" : "ADMIN",
             kodeGordenPhoto: kodeGordenPreview,
             motifGordenPhoto: motifGordenPreview,
             survey_id: survey.id,
-            otherItems: otherItems, // Include other items
+            otherItems: otherItems,
         };
         const encodedData = btoa(JSON.stringify(orderData));
-        // Push WITHOUT &mode=simulasi so it saves to DB
         router.push(`/admin/calculator/gorden/invoice?data=${encodedData}`);
     };
 
@@ -240,14 +302,16 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
             return acc;
         }, 0);
 
+        const savedTotal = savedItems.reduce((acc, item) => acc + item.itemTotalPrice, 0);
+
         const otherItemsTotal = otherItems.reduce((acc, item) => {
             return acc + (item.price * item.quantity);
         }, 0);
 
-        setTotalPrice(windowsTotal + otherItemsTotal);
+        setTotalPrice(windowsTotal + savedTotal + otherItemsTotal);
         setUnitPrice(unitPriceValue);
         setPipaPrice(pipePriceValue);
-    }, [windows, fabric, useVitrace, prices, otherItems, calcMode]);
+    }, [windows, fabric, useVitrace, prices, otherItems, calcMode, savedItems, unitPrice, model, motifCode]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -291,6 +355,27 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                         <span>Vitrace</span>
                         <span className="font-bold">{useVitrace ? 'Ya' : 'Tidak'}</span>
                     </div>
+
+                    {savedItems.length > 0 && (
+                        <div className="border-t border-slate-200 pt-2 mt-2 space-y-1">
+                            <span className="block text-xs font-bold text-slate-400 uppercase">Daftar Gorden</span>
+                            {savedItems.map(item => (
+                                <div key={item.id} className="flex justify-between text-xs group">
+                                    <div className="truncate pr-2">
+                                        <span className="block font-bold text-slate-700 truncate">{item.productName}</span>
+                                        <span className="text-[10px] text-slate-400">{item.windows.length} Jendela • {item.calcMode.replace('_', ' ')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-emerald-600 shrink-0">Rp{item.itemTotalPrice.toLocaleString()}</span>
+                                        <button onClick={() => removeItemFromList(item.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     {otherItems.length > 0 && (
                         <div className="border-t border-slate-200 pt-2 mt-2 space-y-1">
                             <span className="block text-xs font-bold text-slate-400 uppercase">Produk Lainnya</span>
@@ -304,10 +389,20 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                     )}
                 </div>
 
-                <Button onClick={handleCreateInvoice} className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
-                    <Printer className="h-5 w-5" />
-                    Buat Invoice
-                </Button>
+                <div className="flex flex-col gap-3">
+                    <Button
+                        onClick={addItemToList}
+                        className="w-full h-12 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all transition-all duration-300"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Simpan ke Daftar
+                    </Button>
+
+                    <Button onClick={handleCreateInvoice} className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-600/30 hover:shadow-2xl hover:shadow-indigo-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
+                        <Printer className="h-5 w-5" />
+                        Cetak Invoice
+                    </Button>
+                </div>
 
                 <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
                     *Harga sudah termasuk pemasangan

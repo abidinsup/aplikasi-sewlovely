@@ -261,56 +261,69 @@ function InvoiceContent() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {data.windows?.map((w: any, idx: number) => {
-                                const rawW = Number(w.width) || 0;
-                                const rawH = Number(w.height) || 0;
+                            {(data.savedItems || (data.windows ? [{
+                                windows: data.windows,
+                                calcMode: data.calcMode,
+                                fabric: data.fabric,
+                                motifCode: data.motifCode,
+                                model: data.model,
+                                useVitrace: data.useVitrace,
+                                unitPrice: data.unitPrice,
+                                productName: "Gorden Rumah"
+                            }] : [])).map((group: any, groupIdx: number) => (
+                                <React.Fragment key={groupIdx}>
+                                    {group.windows?.map((w: any, windowIdx: number) => {
+                                        const rawW = Number(w.width) || 0;
+                                        const rawH = Number(w.height) || 0;
 
-                                // Calc logic from calculator page
-                                let itemPrice = 0;
-                                let dimensionLabel = "";
+                                        let itemPrice = 0;
+                                        let dimensionLabel = "";
 
-                                if (data.calcMode === "pipe_only" || data.calcMode === "rail_only") {
-                                    const length = Math.max(1, rawW / 100);
-                                    itemPrice = length * (data.unitPrice || 0);
-                                    dimensionLabel = `${rawW}cm`;
-                                } else {
-                                    const area = Math.max(1, (rawW / 100) * (rawH / 100));
-                                    itemPrice = area * (data.unitPrice || 0);
-                                    dimensionLabel = `${rawW}cm x ${rawH}cm`;
-                                }
+                                        if (group.calcMode === "pipe_only" || group.calcMode === "rail_only") {
+                                            const length = Math.max(1, rawW / 100);
+                                            itemPrice = length * (group.unitPrice || 0);
+                                            dimensionLabel = `${rawW}cm`;
+                                        } else {
+                                            const area = (rawW / 100) * (rawH / 100);
+                                            itemPrice = Math.max(1, area) * (group.unitPrice || 0);
+                                            dimensionLabel = `${rawW}cm x ${rawH}cm`;
+                                        }
 
-                                let itemLabel = "Gorden Rumah";
-                                if (data.calcMode === "package") itemLabel = "Paket Gorden + Pipa";
-                                else if (data.calcMode === "gorden_only") itemLabel = "Gorden Saja";
-                                else if (data.calcMode === "pipe_only") itemLabel = "Pipa Gorden Saja";
-                                else if (data.calcMode === "rail_only") itemLabel = "Rel Gorden Saja";
+                                        let itemLabel = group.productName || "Gorden Rumah";
+                                        if (group.calcMode === "package" && !group.productName) itemLabel = "Paket Gorden + Pipa";
+                                        else if (group.calcMode === "gorden_only" && !group.productName) itemLabel = "Gorden Saja";
+                                        else if (group.calcMode === "pipe_only" && !group.productName) itemLabel = "Pipa Saja";
+                                        else if (group.calcMode === "rail_only" && !group.productName) itemLabel = "Rel Saja";
 
-                                return (
-                                    <tr key={idx}>
-                                        <td className="py-4 text-sm font-medium text-slate-400">{idx + 1}</td>
-                                        <td className="py-4">
-                                            <p className="font-bold text-slate-900">{itemLabel} (Jendela {idx + 1})</p>
-                                            <div className="text-xs text-slate-500 mt-1 space-y-0.5">
-                                                {data.calcMode !== "pipe_only" && (
-                                                    <>
-                                                        <p>Kain: <span className="capitalize">{data.fabric}</span> {data.motifCode && `(${data.motifCode})`}</p>
-                                                        <p>Model: <span className="capitalize">{data.model}</span> (Sudah termasuk aksesoris)</p>
-                                                        {data.useVitrace && <p className="font-bold text-emerald-600">+ Vitrace Premium</p>}
-                                                    </>
-                                                )}
-                                                {data.calcMode === "pipe_only" && <p>Pipa gorden complete (Siap pasang)</p>}
-                                                {rawW < 1 && rawW > 0 && <p className="text-amber-600 font-bold">Note: Minimal lebar 1m</p>}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                            {dimensionLabel}
-                                        </td>
-                                        <td className="py-4 text-sm text-right font-bold text-slate-900">
-                                            Rp {itemPrice.toLocaleString("id-ID")}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                        return (
+                                            <tr key={`${groupIdx}-${windowIdx}`}>
+                                                <td className="py-4 text-sm font-medium text-slate-400">
+                                                    {windowIdx === 0 ? groupIdx + 1 : ""}
+                                                </td>
+                                                <td className="py-4">
+                                                    <p className="font-bold text-slate-900">{itemLabel} (Jendela {windowIdx + 1})</p>
+                                                    <div className="text-xs text-slate-500 mt-1 space-y-0.5">
+                                                        {group.calcMode !== "pipe_only" && group.calcMode !== "rail_only" && (
+                                                            <>
+                                                                <p>Kain: <span className="capitalize">{group.fabric}</span> {group.motifCode && `(${group.motifCode})`}</p>
+                                                                <p>Model: <span className="capitalize">{group.model}</span> (Sudah termasuk aksesoris)</p>
+                                                                {group.useVitrace && <p className="font-bold text-emerald-600">+ Vitrace Premium</p>}
+                                                            </>
+                                                        )}
+                                                        {(group.calcMode === "pipe_only" || group.calcMode === "rail_only") && <p>Aksesoris/Pipa/Rel lengkap (Siap pasang)</p>}
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 text-sm text-center font-medium text-slate-700">
+                                                    {dimensionLabel}
+                                                </td>
+                                                <td className="py-4 text-sm text-right font-bold text-slate-900">
+                                                    Rp {itemPrice.toLocaleString("id-ID")}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
                         </tbody>
                         <tbody className="divide-y divide-slate-50 border-t border-slate-100">
                             {/* Produk Lainnya (Sprei & Bedcover) */}

@@ -31,6 +31,7 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
+    const [savedItems, setSavedItems] = React.useState<any[]>([]);
 
     // Initialize previews with survey photos if available
     const [kodeGordenPreview, setKodeGordenPreview] = React.useState<string | null>(survey.kode_gorden_url || null);
@@ -61,38 +62,75 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
         setWindows(windows.map(w => w.id === id ? { ...w, [field]: value } : w));
     };
 
+    const addItemToList = () => {
+        const areWindowsComplete = windows.every(w => w.width && w.height);
+        if (!areWindowsComplete) {
+            toast.warning("Mohon lengkapi ukuran jendela dahulu");
+            return;
+        }
+
+        const currentWindowsTotal = windows.reduce((acc, curr) => {
+            const w = Number(curr.width) || 0;
+            const h = Number(curr.height) || 0;
+            return acc + (Math.max(1, w * h) * unitPrice);
+        }, 0);
+
+        const newItem = {
+            id: Date.now().toString(),
+            productName: `Gorden RS (${fabricType === 'antibakteri' ? 'Anti Bakteri' : 'Anti Darah'})`,
+            windows: [...windows],
+            fabricType,
+            railType,
+            unitPrice,
+            itemTotalPrice: currentWindowsTotal
+        };
+
+        setSavedItems([...savedItems, newItem]);
+        setWindows([{ id: Date.now(), width: "", height: "" }]);
+        toast.success("Berhasil ditambah ke daftar!");
+    };
+
+    const removeItemFromList = (id: string) => {
+        setSavedItems(savedItems.filter(item => item.id !== id));
+    };
+
     const handleCreateInvoice = async () => {
-        // Validation
         const isCustomerInfoComplete = customerInfo.name && customerInfo.phone && customerInfo.address;
-        const areFieldsComplete = windows.every(w => w.width && w.height);
-
-        if (!isCustomerInfoComplete || !areFieldsComplete) {
-            toast.warning("Mohon semua data dilengkapi");
+        if (!isCustomerInfoComplete) {
+            toast.warning("Mohon lengkapi data pemesan");
             return;
         }
 
-        // Validate no zero values
-        const hasZeroValues = windows.some(w => parseFloat(w.width) <= 0 || parseFloat(w.height) <= 0);
-        if (hasZeroValues) {
-            toast.error("Lebar dan tinggi jendela harus lebih dari 0");
-            return;
+        let finalItems = [...savedItems];
+        const areCurrentWindowsComplete = windows.some(w => w.width && w.height);
+
+        if (areCurrentWindowsComplete && windows.every(w => w.width && w.height)) {
+            const currentWindowsTotal = windows.reduce((acc, curr) => {
+                const w = Number(curr.width) || 0;
+                const h = Number(curr.height) || 0;
+                return acc + (Math.max(1, w * h) * unitPrice);
+            }, 0);
+
+            finalItems.push({
+                id: "current-" + Date.now(),
+                productName: `Gorden RS (${fabricType === 'antibakteri' ? 'Anti Bakteri' : 'Anti Darah'})`,
+                windows: [...windows],
+                fabricType,
+                railType,
+                unitPrice,
+                itemTotalPrice: currentWindowsTotal
+            });
         }
 
-        // Validate total price is not zero
-        if (totalPrice <= 0) {
-            toast.error("Total harga tidak boleh Rp 0. Pastikan ukuran jendela sudah benar.");
+        if (finalItems.length === 0) {
+            toast.warning("Daftar pesanan masih kosong. Gunakan tombol 'Simpan ke Daftar'.");
             return;
         }
-
-        // Admin creates invoices directly
 
         const orderData = {
             customerInfo,
-            windows,
-            fabricType,
-            railType,
+            savedItems: finalItems,
             totalPrice,
-            unitPrice,
             surveyDate,
             surveyTime,
             partner_id: survey.partner_id,
@@ -102,7 +140,6 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
             survey_id: survey.id,
         };
         const encodedData = btoa(JSON.stringify(orderData));
-        // Push WITHOUT &mode=simulasi so it saves to DB
         router.push(`/admin/calculator/rs/invoice?data=${encodedData}`);
     };
 
@@ -122,7 +159,7 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
         const basePackagePrice = fabricPrice + railPrice;
         setUnitPrice(basePackagePrice);
 
-        const totalCalculated = windows.reduce((acc, curr) => {
+        const totalWindowsCurrent = windows.reduce((acc, curr) => {
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
             if (w > 0 && h > 0) {
@@ -133,8 +170,9 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
             return acc;
         }, 0);
 
-        setTotalPrice(totalCalculated);
-    }, [windows, fabricType, railType, prices]);
+        const savedTotal = savedItems.reduce((acc, item) => acc + item.itemTotalPrice, 0);
+        setTotalPrice(totalWindowsCurrent + savedTotal);
+    }, [windows, fabricType, railType, prices, savedItems]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -153,25 +191,53 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
                     </div>
                 </div>
 
-                <div className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
-                    <div className="flex justify-between">
-                        <span>Jenis Paket</span>
-                        <span className="font-bold capitalize">{fabricType} + Rel</span>
+                <div className="space-y-4 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">
+                    <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <span>Jenis Paket</span>
+                            <span className="font-bold capitalize">{fabricType} + Rel</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Jenis Kain</span>
+                            <span className="font-bold capitalize">{fabricType === 'antibakteri' ? 'Anti Bakteri' : 'Anti Darah'}</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between">
-                        <span>Jenis Kain</span>
-                        <span className="font-bold capitalize">{fabricType === 'antibakteri' ? 'Anti Bakteri (Polyester)' : 'Anti Darah (PVC)'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Tipe Rel</span>
-                        <span className="font-bold capitalize">{railType === 'flexy' ? 'Rel Flexy' : 'Rel Standar'}</span>
-                    </div>
+
+                    {savedItems.length > 0 && (
+                        <div className="border-t border-slate-200 pt-3 mt-1 space-y-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Daftar Item</p>
+                            {savedItems.map((item) => (
+                                <div key={item.id} className="group flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                                    <div className="truncate pr-2">
+                                        <p className="font-bold text-slate-700 text-[11px] truncate">{item.productName}</p>
+                                        <p className="text-[10px] text-slate-400">{item.windows.length} Jendela • {item.railType}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-bold text-emerald-600 text-xs">Rp{item.itemTotalPrice.toLocaleString()}</p>
+                                        <button
+                                            onClick={() => removeItemFromList(item.id)}
+                                            className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <Button onClick={handleCreateInvoice} className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
-                    <Printer className="h-5 w-5" />
-                    Buat Invoice
-                </Button>
+                <div className="flex flex-col gap-3">
+                    <Button onClick={addItemToList} variant="outline" className="w-full h-12 border-emerald-200 text-emerald-600 hover:bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
+                        <Plus className="h-4 w-4" />
+                        Simpan ke Daftar
+                    </Button>
+
+                    <Button onClick={handleCreateInvoice} className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-2xl hover:shadow-emerald-600/50 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95">
+                        <Printer className="h-5 w-5" />
+                        Buat Invoice
+                    </Button>
+                </div>
 
                 <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
                     *Harga sudah termasuk pemasangan

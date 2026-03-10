@@ -238,31 +238,43 @@ function InvoiceContent() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {data.windows.map((w: any, idx: number) => {
-                                const width = Number(w.width) || 0;
-                                const height = Number(w.height) || 0;
-                                const area = Math.max(1, width * height);
+                            {(data.savedItems || (data.windows ? [{
+                                windows: data.windows,
+                                fabricType: data.fabricType,
+                                railType: data.railType,
+                                unitPrice: data.unitPrice,
+                                productName: "Paket Gorden RS"
+                            }] : [])).map((group: any, groupIdx: number) => (
+                                <React.Fragment key={groupIdx}>
+                                    {group.windows?.map((w: any, windowIdx: number) => {
+                                        const width = Number(w.width) || 0;
+                                        const height = Number(w.height) || 0;
+                                        const area = Math.max(1, width * height);
 
-                                return (
-                                    <tr key={idx}>
-                                        <td className="py-4 text-sm font-medium text-slate-400">{idx + 1}</td>
-                                        <td className="py-4">
-                                            <p className="font-bold text-slate-900">Paket Gorden RS (Jendela {idx + 1})</p>
-                                            <div className="text-xs text-slate-500 mt-1 space-y-0.5">
-                                                <p>Kain: <span className="capitalize font-semibold">{data.fabricType === 'antibakteri' ? 'Anti Bakteri (Polyester)' : 'Anti Darah (PVC)'}</span></p>
-                                                <p>Rel: <span className="capitalize font-semibold">{data.railType === 'flexy' ? 'Flexy' : 'Standar'}</span></p>
-                                                <p className="font-medium text-emerald-600">Terhitung Paket (Bahan + Rel + Pasang)</p>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                            {w.width}m x {w.height}m
-                                        </td>
-                                        <td className="py-4 text-sm text-right font-bold text-slate-900">
-                                            Rp {(area * (data.unitPrice || 0)).toLocaleString("id-ID")}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                        return (
+                                            <tr key={`${groupIdx}-${windowIdx}`}>
+                                                <td className="py-4 text-sm font-medium text-slate-400">
+                                                    {windowIdx === 0 ? groupIdx + 1 : ""}
+                                                </td>
+                                                <td className="py-4">
+                                                    <p className="font-bold text-slate-900">{group.productName || "Paket Gorden RS"} (Jendela {windowIdx + 1})</p>
+                                                    <div className="text-xs text-slate-500 mt-1 space-y-0.5">
+                                                        <p>Kain: <span className="capitalize font-semibold">{group.fabricType === 'antibakteri' ? 'Anti Bakteri (Polyester)' : 'Anti Darah (PVC)'}</span></p>
+                                                        <p>Rel: <span className="capitalize font-semibold">{group.railType === 'flexy' ? 'Flexy' : 'Standar'}</span></p>
+                                                        <p className="font-medium text-emerald-600">Terhitung Paket (Bahan + Rel + Pasang)</p>
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 text-sm text-center font-medium text-slate-700">
+                                                    {w.width}m x {w.height}m
+                                                </td>
+                                                <td className="py-4 text-sm text-right font-bold text-slate-900">
+                                                    Rp {(area * (group.unitPrice || 0)).toLocaleString("id-ID")}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
                         </tbody>
                     </table>
                 </div>
