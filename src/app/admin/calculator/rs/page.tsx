@@ -27,8 +27,7 @@ export default function HospitalCalculatorPage() {
     const [motifGordenPreview, setMotifGordenPreview] = React.useState<string | null>(null);
     const [savedItems, setSavedItems] = React.useState<any[]>([]);
 
-    // Connecting Pipe State
-    const [useConnectingPipe, setUseConnectingPipe] = React.useState(false);
+    // Connecting Pipe State - Defaulting to always active
     const [selectedPipeId, setSelectedPipeId] = React.useState<number | null>(null);
 
     React.useEffect(() => {
@@ -36,6 +35,9 @@ export default function HospitalCalculatorPage() {
             const result = await getProducts();
             if (result.success && result.data) {
                 setPrices(result.data);
+                // Auto-select standard pipe (35-60 cm)
+                const defaultPipe = result.data.find(p => p.name.includes("Connecting Pipe 35-60"));
+                if (defaultPipe) setSelectedPipeId(defaultPipe.id);
             }
         };
         fetchPrices();
@@ -93,7 +95,7 @@ export default function HospitalCalculatorPage() {
 
                 const windowFabricTotal = wCalculated * fPrice * panels;
                 const windowRailTotal = wCalculated * rPrice;
-                const windowPipeTotal = useConnectingPipe ? pipesCount * pPrice : 0;
+                const windowPipeTotal = pipesCount * pPrice; // Always included
 
                 return acc + windowFabricTotal + windowRailTotal + windowPipeTotal;
             }
@@ -108,16 +110,14 @@ export default function HospitalCalculatorPage() {
             railType,
             fabricPrice: fPrice,
             railPrice: rPrice,
-            useConnectingPipe,
+            useConnectingPipe: true,
             pipePrice: pPrice,
-            pipeName: pipeProduct?.name || "",
+            pipeName: pipeProduct?.name || "Connecting Pipe 35-60 cm",
             itemTotalPrice: currentWindowsTotal
         };
 
         setSavedItems([...savedItems, newItem]);
         setWindows([{ id: Date.now(), width: "", height: "" }]);
-        setUseConnectingPipe(false);
-        setSelectedPipeId(null);
         toast.success("Berhasil ditambah ke daftar!");
     };
 
@@ -169,7 +169,7 @@ export default function HospitalCalculatorPage() {
 
                     const windowFabricTotal = wCalculated * fPrice * panels;
                     const windowRailTotal = wCalculated * rPrice;
-                    const windowPipeTotal = useConnectingPipe ? pipesCount * pPrice : 0;
+                    const windowPipeTotal = pipesCount * pPrice; // Always included
 
                     return acc + windowFabricTotal + windowRailTotal + windowPipeTotal;
                 }
@@ -184,9 +184,9 @@ export default function HospitalCalculatorPage() {
                 railType,
                 fabricPrice: fPrice,
                 railPrice: rPrice,
-                useConnectingPipe,
+                useConnectingPipe: true,
                 pipePrice: pPrice,
-                pipeName: pipeProduct?.name || "",
+                pipeName: pipeProduct?.name || "Connecting Pipe 35-60 cm",
                 itemTotalPrice: currentWindowsTotal
             });
         }
@@ -246,7 +246,7 @@ export default function HospitalCalculatorPage() {
 
                 const windowFabricTotal = wCalculated * fPrice * panels;
                 const windowRailTotal = wCalculated * rPrice;
-                const windowPipeTotal = useConnectingPipe ? pipesCount * pPrice : 0;
+                const windowPipeTotal = pipesCount * pPrice; // Always included
 
                 return acc + windowFabricTotal + windowRailTotal + windowPipeTotal;
             }
@@ -257,7 +257,7 @@ export default function HospitalCalculatorPage() {
 
         const savedTotal = savedItems.reduce((acc, item) => acc + item.itemTotalPrice, 0);
         setTotalPrice(totalCalculated + savedTotal);
-    }, [windows, fabricType, railType, prices, savedItems, useConnectingPipe, selectedPipeId]);
+    }, [windows, fabricType, railType, prices, savedItems, selectedPipeId]);
 
     const SummaryCard = ({ isMobile = false }) => (
         <div className={cn(
@@ -310,12 +310,10 @@ export default function HospitalCalculatorPage() {
                             <span>Harga Rel/m</span>
                             <span className="font-bold">Rp {((prices.find(p => railType === "flexy" ? p.name.includes("Flexy") : p.name.includes("Standar"))?.price) || 0).toLocaleString()}</span>
                         </div>
-                        {useConnectingPipe && (
-                            <div className="flex justify-between text-blue-600">
-                                <span>Pipa ({prices.find(p => p.id === selectedPipeId)?.name.split('Pipe ')[1]})</span>
-                                <span className="font-bold">Rp {(prices.find(p => p.id === selectedPipeId)?.price || 0).toLocaleString()}</span>
-                            </div>
-                        )}
+                        <div className="flex justify-between text-blue-600">
+                            <span>Connecting Pipe (35-60cm)</span>
+                            <span className="font-bold">Rp {(prices.find(p => p.id === selectedPipeId)?.price || 0).toLocaleString()}</span>
+                        </div>
                         <div className="flex justify-between pt-1 border-t border-dashed border-slate-300">
                             <span>Harga Paket/m</span>
                             <span className="font-bold text-slate-900">Rp {(unitPrice).toLocaleString()}</span>
@@ -565,46 +563,9 @@ export default function HospitalCalculatorPage() {
                                 </button>
                             </div>
 
-                            {/* Connecting Pipe Sub-section */}
-                            <div className="mt-6 pt-6 border-t border-slate-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-8 w-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-bold text-xs">P</div>
-                                        <h3 className="font-bold text-slate-800 text-sm">Connecting Pipe (Opsional)</h3>
-                                    </div>
-                                    <button
-                                        onClick={() => setUseConnectingPipe(!useConnectingPipe)}
-                                        className={cn(
-                                            "px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all",
-                                            useConnectingPipe ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
-                                        )}
-                                    >
-                                        {useConnectingPipe ? "Aktif" : "Gunakan Pipe"}
-                                    </button>
-                                </div>
-
-                                {useConnectingPipe && (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        {prices.filter(p => p.name.includes("Connecting Pipe")).map((pipe) => {
-                                            const label = pipe.name.split('Pipe ')[1];
-                                            return (
-                                                <button
-                                                    key={pipe.id}
-                                                    onClick={() => setSelectedPipeId(pipe.id)}
-                                                    className={cn(
-                                                        "p-3 rounded-xl border-2 text-left transition-all",
-                                                        selectedPipeId === pipe.id
-                                                            ? "bg-blue-50 border-blue-500"
-                                                            : "bg-white border-slate-100 hover:bg-slate-50"
-                                                    )}
-                                                >
-                                                    <p className="font-bold text-slate-800 text-xs">{label}</p>
-                                                    <p className="text-[10px] text-slate-500">Rp {pipe.price.toLocaleString()}</p>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                            {/* Connecting Pipe Sub-section - Automated */}
+                            <div className="mt-6 pt-6 border-t border-slate-100 italic text-[10px] text-slate-400">
+                                *Sistem otomatis menyertakan Connecting Pipe 35-60cm sesuai standar plafon 3m.
                             </div>
                         </section>
 
