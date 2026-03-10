@@ -249,7 +249,10 @@ function InvoiceContent() {
                                     {group.windows?.map((w: any, windowIdx: number) => {
                                         const width = Number(w.width) || 0;
                                         const height = Number(w.height) || 0;
-                                        const area = Math.max(1, width * height);
+
+                                        const wCalculated = Math.max(1, width);
+                                        const multiplier = Math.ceil(height / 2.8);
+                                        const totalItemPrice = wCalculated * (group.unitPrice || 0) * multiplier;
 
                                         return (
                                             <tr key={`${groupIdx}-${windowIdx}`}>
@@ -262,13 +265,15 @@ function InvoiceContent() {
                                                         <p>Kain: <span className="capitalize font-semibold">{group.fabricType === 'antibakteri' ? 'Anti Bakteri (Polyester)' : 'Anti Darah (PVC)'}</span></p>
                                                         <p>Rel: <span className="capitalize font-semibold">{group.railType === 'flexy' ? 'Flexy' : 'Standar'}</span></p>
                                                         <p className="font-medium text-emerald-600">Terhitung Paket (Bahan + Rel + Pasang)</p>
+                                                        <p>Kerut 1.5x</p>
+                                                        {multiplier > 1 && <p className="text-amber-600">Belah Kain X{multiplier} (Tinggi melebihi 2.8m)</p>}
                                                     </div>
                                                 </td>
                                                 <td className="py-4 text-sm text-center font-medium text-slate-700">
-                                                    {w.width}m x {w.height}m
+                                                    {w.width}m L x {w.height}m T
                                                 </td>
                                                 <td className="py-4 text-sm text-right font-bold text-slate-900">
-                                                    Rp {(area * (group.unitPrice || 0)).toLocaleString("id-ID")}
+                                                    Rp {totalItemPrice.toLocaleString("id-ID")}
                                                 </td>
                                             </tr>
                                         );

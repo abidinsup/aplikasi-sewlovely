@@ -72,7 +72,19 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
         const currentWindowsTotal = windows.reduce((acc, curr) => {
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
-            return acc + (Math.max(1, w * h) * unitPrice);
+
+            if (w > 0 && h > 0) {
+                const wCalculated = Math.max(1, w);
+
+                // Tambahan pemakaian kain kerut 1.5x
+                const kainNeeded = wCalculated * 1.5;
+
+                // Tinggi standar pabrik 2.8m. Jika tinggi > 2.8m butuh sambungan kain (beli double lebar).
+                const multiplier = Math.ceil(h / 2.8);
+
+                return acc + (wCalculated * unitPrice * multiplier);
+            }
+            return acc;
         }, 0);
 
         const newItem = {
@@ -108,7 +120,13 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
             const currentWindowsTotal = windows.reduce((acc, curr) => {
                 const w = Number(curr.width) || 0;
                 const h = Number(curr.height) || 0;
-                return acc + (Math.max(1, w * h) * unitPrice);
+
+                if (w > 0 && h > 0) {
+                    const wCalculated = Math.max(1, w);
+                    const multiplier = Math.ceil(h / 2.8);
+                    return acc + (wCalculated * unitPrice * multiplier);
+                }
+                return acc;
             }, 0);
 
             finalItems.push({
@@ -163,9 +181,14 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
             const w = Number(curr.width) || 0;
             const h = Number(curr.height) || 0;
             if (w > 0 && h > 0) {
-                // Min charge 1m2 per window
-                const area = Math.max(1, w * h);
-                return acc + (area * basePackagePrice);
+                // Min charge lebar 1 meter
+                const wCalculated = Math.max(1, w);
+
+                // Pemakaian bahan: (Harga Kain + Rel) dihitung per meter lebar
+                // Tinggi memakan bahan extra jika > 2.8m, butuh penyambungan (artinya belanja kain x2 / x3)
+                const multiplier = Math.ceil(h / 2.8);
+
+                return acc + (wCalculated * basePackagePrice * multiplier);
             }
             return acc;
         }, 0);
