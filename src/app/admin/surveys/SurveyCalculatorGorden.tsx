@@ -38,7 +38,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
     const [surveyTime] = React.useState<string | null>(survey.survey_time);
     const [fabric, setFabric] = React.useState<"blackout" | "dimout">("blackout");
     const [useVitrace, setUseVitrace] = React.useState(false);
-    const [calcMode, setCalcMode] = React.useState<"package" | "gorden_only" | "pipe_only">("package");
+    const [calcMode, setCalcMode] = React.useState<"package" | "gorden_only" | "pipe_only" | "rail_only">("package");
     const [model, setModel] = React.useState<"smokering" | "cantel">("smokering");
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
@@ -151,12 +151,12 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         const hasZeroValues = windows.some(w => {
             const wVal = parseFloat(w.width);
             const hVal = parseFloat(w.height);
-            if (calcMode === "pipe_only") return wVal <= 0;
+            if (calcMode === "pipe_only" || calcMode === "rail_only") return wVal <= 0;
             return wVal <= 0 || hVal <= 0;
         });
 
         if (hasZeroValues) {
-            toast.error(calcMode === "pipe_only" ? "Lebar harus lebih dari 0" : "Lebar dan tinggi harus lebih dari 0");
+            toast.error((calcMode === "pipe_only" || calcMode === "rail_only") ? "Lebar harus lebih dari 0" : "Lebar dan tinggi harus lebih dari 0");
             return;
         }
 
@@ -201,6 +201,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
         const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
         const pipePriceValue = prices.find(p => p.name.toUpperCase().includes("PIPA"))?.price || 0;
+        const railPriceValue = prices.find(p => p.name.toUpperCase().includes("REL"))?.price || 0;
 
         let baseFabricPrice = fabric === "blackout" ? packageBlackout : packageDimout;
         let vitracePriceVal = useVitrace ? packageVitrace : 0;
@@ -212,6 +213,8 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
             unitPriceValue = baseFabricPrice + vitracePriceVal;
         } else if (calcMode === "pipe_only") {
             unitPriceValue = pipePriceValue;
+        } else if (calcMode === "rail_only") {
+            unitPriceValue = railPriceValue;
         }
 
         const windowsTotal = windows.reduce((acc, curr) => {
@@ -222,7 +225,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
             const w = rawW / 100;
             const h = rawH / 100;
 
-            if (calcMode === "pipe_only") {
+            if (calcMode === "pipe_only" || calcMode === "rail_only") {
                 if (w > 0) {
                     const length = Math.max(1, w);
                     return acc + (length * unitPriceValue);
@@ -270,7 +273,11 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                     </div>
                     <div className="flex justify-between">
                         <span>Jenis Hitung</span>
-                        <span className="font-bold capitalize">{calcMode === 'package' ? 'Gorden + Pipa' : calcMode === 'gorden_only' ? 'Gorden Saja' : 'Pipa Saja'}</span>
+                        <span className="font-bold capitalize">
+                            {calcMode === 'package' ? 'Gorden + Pipa' :
+                                calcMode === 'gorden_only' ? 'Gorden Saja' :
+                                    calcMode === 'pipe_only' ? 'Pipa Saja' : 'Rel Saja'}
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span>Jenis Kain</span>
@@ -384,6 +391,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                                 { id: 'package', label: 'Paket (Gorden + Pipa)', icon: <CheckCircle2 className="h-4 w-4" /> },
                                 { id: 'gorden_only', label: 'Gorden Saja', icon: <Layers className="h-4 w-4" /> },
                                 { id: 'pipe_only', label: 'Pipa Saja', icon: <Grid className="h-4 w-4" /> },
+                                { id: 'rail_only', label: 'Rel Saja', icon: <Grid className="h-4 w-4" /> },
                             ].map((mode) => (
                                 <button
                                     key={mode.id}
@@ -444,7 +452,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                                                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                             </div>
                                         </div>
-                                        {calcMode !== 'pipe_only' && (
+                                        {calcMode !== 'pipe_only' && calcMode !== 'rail_only' && (
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
                                                 <div className="relative group">
@@ -466,7 +474,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                     </section>
 
                     {/* 2. Pilihan Kain */}
-                    {calcMode !== "pipe_only" && (
+                    {calcMode !== "pipe_only" && calcMode !== "rail_only" && (
                         <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
                                 <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Layers className="h-5 w-5" /></div>
@@ -533,7 +541,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                     )}
 
                     {/* 3. Model & Foto */}
-                    {calcMode !== "pipe_only" && (
+                    {calcMode !== "pipe_only" && calcMode !== "rail_only" && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Model Gorden */}
                             <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">

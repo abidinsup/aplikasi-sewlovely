@@ -269,7 +269,7 @@ function InvoiceContent() {
                                 let itemPrice = 0;
                                 let dimensionLabel = "";
 
-                                if (data.calcMode === "pipe_only") {
+                                if (data.calcMode === "pipe_only" || data.calcMode === "rail_only") {
                                     const length = Math.max(1, rawW / 100);
                                     itemPrice = length * (data.unitPrice || 0);
                                     dimensionLabel = `${rawW}cm`;
@@ -283,6 +283,7 @@ function InvoiceContent() {
                                 if (data.calcMode === "package") itemLabel = "Paket Gorden + Pipa";
                                 else if (data.calcMode === "gorden_only") itemLabel = "Gorden Saja";
                                 else if (data.calcMode === "pipe_only") itemLabel = "Pipa Gorden Saja";
+                                else if (data.calcMode === "rail_only") itemLabel = "Rel Gorden Saja";
 
                                 return (
                                     <tr key={idx}>

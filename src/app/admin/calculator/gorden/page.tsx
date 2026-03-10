@@ -22,7 +22,7 @@ export default function CurtainCalculatorPage() {
     const [fabric, setFabric] = React.useState<"blackout" | "dimout">("blackout");
     const [useVitrace, setUseVitrace] = React.useState(false);
     const [model, setModel] = React.useState<"smokering" | "cantel">("smokering");
-    const [calcMode, setCalcMode] = React.useState<"package" | "gorden_only" | "pipe_only">("package");
+    const [calcMode, setCalcMode] = React.useState<"package" | "gorden_only" | "pipe_only" | "rail_only">("package");
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
@@ -112,6 +112,7 @@ export default function CurtainCalculatorPage() {
         const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
         const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
         const pipePrice = prices.find(p => p.name.toUpperCase().includes("PIPA"))?.price || 0;
+        const railPrice = prices.find(p => p.name.toUpperCase().includes("REL"))?.price || 0;
 
         let baseFabricPrice = fabric === "blackout" ? packageBlackout : packageDimout;
         let vitracePrice = useVitrace ? packageVitrace : 0;
@@ -123,6 +124,8 @@ export default function CurtainCalculatorPage() {
             unitPriceValue = baseFabricPrice + vitracePrice;
         } else if (calcMode === "pipe_only") {
             unitPriceValue = pipePrice;
+        } else if (calcMode === "rail_only") {
+            unitPriceValue = railPrice;
         }
 
         if (unitPriceValue !== unitPrice) setUnitPrice(unitPriceValue);
@@ -136,7 +139,7 @@ export default function CurtainCalculatorPage() {
             const w = rawW / 100;
             const h = rawH / 100;
 
-            if (calcMode === "pipe_only") {
+            if (calcMode === "pipe_only" || calcMode === "rail_only") {
                 if (w > 0) {
                     const length = Math.max(1, w);
                     return acc + (length * unitPriceValue);
@@ -178,7 +181,11 @@ export default function CurtainCalculatorPage() {
                     </div>
                     <div className="flex justify-between">
                         <span>Jenis Hitung</span>
-                        <span className="font-bold capitalize">{calcMode === 'package' ? 'Gorden + Pipa' : calcMode === 'gorden_only' ? 'Gorden Saja' : 'Pipa Saja'}</span>
+                        <span className="font-bold capitalize">
+                            {calcMode === 'package' ? 'Gorden + Pipa' :
+                                calcMode === 'gorden_only' ? 'Gorden Saja' :
+                                    calcMode === 'pipe_only' ? 'Pipa Saja' : 'Rel Saja'}
+                        </span>
                     </div>
                     {calcMode !== "pipe_only" && (
                         <div className="flex justify-between">
@@ -316,6 +323,17 @@ export default function CurtainCalculatorPage() {
                                     <span className={cn("font-bold text-sm", calcMode === "pipe_only" ? "text-emerald-800" : "text-slate-800")}>Pipa Saja</span>
                                     {calcMode === "pipe_only" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-1" />}
                                 </button>
+
+                                <button
+                                    onClick={() => setCalcMode("rail_only")}
+                                    className={cn(
+                                        "px-4 py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all duration-300 text-center relative overflow-hidden",
+                                        calcMode === "rail_only" ? "bg-emerald-50 border-emerald-500 shadow-sm" : "bg-white border-slate-100 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <span className={cn("font-bold text-sm", calcMode === "rail_only" ? "text-emerald-800" : "text-slate-800")}>Rel Saja</span>
+                                    {calcMode === "rail_only" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-1" />}
+                                </button>
                             </div>
                         </section>
 
@@ -342,7 +360,7 @@ export default function CurtainCalculatorPage() {
                                                 </button>
                                             </div>
                                         )}
-                                        <div className={cn("grid grid-cols-1 gap-6", calcMode === "pipe_only" ? "sm:grid-cols-1" : "sm:grid-cols-2")}>
+                                        <div className={cn("grid grid-cols-1 gap-6", (calcMode === "pipe_only" || calcMode === "rail_only") ? "sm:grid-cols-1" : "sm:grid-cols-2")}>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Lebar (cm) {window.width && parseFloat(window.width) < 100 && <span className="text-amber-600 font-bold ml-1">(Min 100cm)</span>}</label>
                                                 <div className="relative group">
@@ -363,7 +381,7 @@ export default function CurtainCalculatorPage() {
                                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-300 font-medium">cm</span>
                                                 </div>
                                             </div>
-                                            {calcMode !== "pipe_only" && (
+                                            {calcMode !== "pipe_only" && calcMode !== "rail_only" && (
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Tinggi (cm)</label>
                                                     <div className="relative group">
