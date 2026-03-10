@@ -201,7 +201,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
         const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
         const pipePriceValue = prices.find(p => p.name.toUpperCase().includes("PIPA"))?.price || 0;
-        const railPriceValue = prices.find(p => p.name.toUpperCase().includes("REL"))?.price || 0;
+        const railPriceValue = prices.find(p => p.name.toUpperCase().includes("REL VITRACE"))?.price || 0;
 
         let baseFabricPrice = fabric === "blackout" ? packageBlackout : packageDimout;
         let vitracePriceVal = useVitrace ? packageVitrace : 0;

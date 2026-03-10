@@ -112,7 +112,7 @@ export default function CurtainCalculatorPage() {
         const packageDimout = prices.find(p => p.name.toUpperCase().includes("DIMOUT"))?.price || 0;
         const packageVitrace = prices.find(p => p.name.toUpperCase().includes("VITRACE"))?.price || 0;
         const pipePrice = prices.find(p => p.name.toUpperCase().includes("PIPA"))?.price || 0;
-        const railPrice = prices.find(p => p.name.toUpperCase().includes("REL"))?.price || 0;
+        const railPrice = prices.find(p => p.name.toUpperCase().includes("REL VITRACE"))?.price || 0;
 
         let baseFabricPrice = fabric === "blackout" ? packageBlackout : packageDimout;
         let vitracePrice = useVitrace ? packageVitrace : 0;
