@@ -509,37 +509,22 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                 </div>
 
                                 {selectedProductId === "custom" && (
-                                    <>
-                                        <div className="space-y-2.5">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Tipe / Kategori</label>
-                                            <div className="flex p-1.5 bg-slate-100 rounded-xl gap-1">
-                                                {(['roller', 'vertical', 'venetian'] as const).map(type => (
-                                                    <button
-                                                        key={type}
-                                                        onClick={() => setBlindType(type)}
-                                                        className={cn(
-                                                            "flex-1 py-2 px-1 rounded-lg text-[9px] xl:text-[10px] font-black uppercase transition-all duration-300 truncate",
-                                                            blindType === type
-                                                                ? "bg-emerald-600 text-white shadow-md scale-100"
-                                                                : "bg-transparent text-slate-400 hover:text-slate-600 hover:bg-white/50"
-                                                        )}
-                                                    >
-                                                        {type}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2.5">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nama Produk (di Invoice)</label>
-                                            <Input
-                                                placeholder="Contoh: Roller Blind Blackout Seri SP.20"
-                                                className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold text-slate-700"
-                                                value={manualProductName}
-                                                onChange={(e) => setManualProductName(e.target.value)}
-                                            />
-                                        </div>
-                                    </>
+                                    <div className="space-y-2.5">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nama Produk (di Invoice)</label>
+                                        <Input
+                                            placeholder="Contoh: Roller Blind Blackout Seri SP.20"
+                                            className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold text-slate-700"
+                                            value={manualProductName}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setManualProductName(val);
+                                                const lowVal = val.toLowerCase();
+                                                if (lowVal.includes("roller")) setBlindType("roller");
+                                                else if (lowVal.includes("vertical")) setBlindType("vertical");
+                                                else if (lowVal.includes("venetian")) setBlindType("venetian");
+                                            }}
+                                        />
+                                    </div>
                                 )}
 
                                 <div className="space-y-2.5">
