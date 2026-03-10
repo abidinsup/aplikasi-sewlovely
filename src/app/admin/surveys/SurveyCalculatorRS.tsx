@@ -228,7 +228,10 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <Button onClick={addItemToList} variant="outline" className="w-full h-12 border-emerald-200 text-emerald-600 hover:bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
+                    <Button
+                        onClick={addItemToList}
+                        className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40"
+                    >
                         <Plus className="h-4 w-4" />
                         Simpan ke Daftar
                     </Button>
