@@ -32,6 +32,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
     const [selectedProductId, setSelectedProductId] = React.useState<string>("custom");
     const [manualProductName, setManualProductName] = React.useState("");
     const [manualPrice, setManualPrice] = React.useState<string>("");
+    const [selectedUnit, setSelectedUnit] = React.useState("per m2");
 
     // Saved items (the "Basket")
     const [savedItems, setSavedItems] = React.useState<any[]>([]);
@@ -81,11 +82,19 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         if (val === "custom") {
             setManualProductName("");
             setManualPrice("");
+            setSelectedUnit("per m2");
         } else {
             const product = prices.find(p => p.id.toString() === val);
             if (product) {
                 setManualProductName(product.name);
                 setManualPrice(product.price.toString());
+                setSelectedUnit(product.unit || "per m2");
+
+                // Auto-detect blind type for metadata consistency
+                const name = product.name.toLowerCase();
+                if (name.includes("roller")) setBlindType("roller");
+                else if (name.includes("vertical")) setBlindType("vertical");
+                else if (name.includes("venetian")) setBlindType("venetian");
             }
         }
     };
@@ -110,10 +119,17 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         }
 
         const itemCalculatedPrice = windows.reduce((acc, curr) => {
-            const w_cm = Number(curr.width) || 0;
-            const h_cm = Number(curr.height) || 0;
-            const area = (Math.max(1, w_cm / 100)) * (Math.max(1, h_cm / 100));
-            return acc + (area * priceToUse);
+            const w_m = (Number(curr.width) || 0) / 100;
+            const h_m = (Number(curr.height) || 0) / 100;
+
+            if (selectedUnit === "per m") {
+                // Meter Lari: Hanya Lebar (Min 1m)
+                return acc + (Math.max(1, w_m) * priceToUse);
+            } else {
+                // Meter Persegi: Lebar x Tinggi (Min 1m per sisi khusus Kantor)
+                const area = (Math.max(1, w_m)) * (Math.max(1, h_m));
+                return acc + (area * priceToUse);
+            }
         }, 0);
 
         const newItem = {
@@ -122,6 +138,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
             blindType: blindType, // Still keep for metadata
             windows: [...windows],
             unitPrice: priceToUse,
+            unit: selectedUnit,
             itemTotalPrice: itemCalculatedPrice
         };
 
@@ -155,10 +172,15 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         if (areCurrentWindowsComplete && windows.every(w => w.width && w.height) && manualProductName && parseFloat(manualPrice) > 0) {
             const priceToUse = parseFloat(manualPrice);
             const itemCalculatedPrice = windows.reduce((acc, curr) => {
-                const w_cm = Number(curr.width) || 0;
-                const h_cm = Number(curr.height) || 0;
-                const area = (Math.max(1, w_cm / 100)) * (Math.max(1, h_cm / 100));
-                return acc + (area * priceToUse);
+                const w_m = (Number(curr.width) || 0) / 100;
+                const h_m = (Number(curr.height) || 0) / 100;
+
+                if (selectedUnit === "per m") {
+                    return acc + (Math.max(1, w_m) * priceToUse);
+                } else {
+                    const area = (Math.max(1, w_m)) * (Math.max(1, h_m));
+                    return acc + (area * priceToUse);
+                }
             }, 0);
 
             finalItems.push({
@@ -167,6 +189,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                 blindType: blindType,
                 windows: [...windows],
                 unitPrice: priceToUse,
+                unit: selectedUnit,
                 itemTotalPrice: itemCalculatedPrice
             });
         }
@@ -201,11 +224,16 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         // Current progress
         const currentPrice = parseFloat(manualPrice) || 0;
         const currentProgressTotal = windows.reduce((acc, curr) => {
-            const w_cm = Number(curr.width) || 0;
-            const h_cm = Number(curr.height) || 0;
-            if (w_cm > 0 && h_cm > 0) {
-                const area = (Math.max(1, w_cm / 100)) * (Math.max(1, h_cm / 100));
-                return acc + (area * currentPrice);
+            const w_m = (Number(curr.width) || 0) / 100;
+            const h_m = (Number(curr.height) || 0) / 100;
+
+            if (w_m > 0 && (selectedUnit === "per m" || h_m > 0)) {
+                if (selectedUnit === "per m") {
+                    return acc + (Math.max(1, w_m) * currentPrice);
+                } else {
+                    const area = (Math.max(1, w_m)) * (Math.max(1, h_m));
+                    return acc + (area * currentPrice);
+                }
             }
             return acc;
         }, 0);
@@ -245,7 +273,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                     <div key={item.id} className="group/item flex justify-between items-center gap-2 bg-white p-3 rounded-xl border border-slate-100/80 hover:border-emerald-200 transition-all shadow-sm">
                                         <div className="truncate">
                                             <p className="font-bold text-[11px] text-slate-700 truncate">{item.productName}</p>
-                                            <p className="text-[10px] text-slate-400 font-medium">{item.windows.length} Jendela • Rp{item.unitPrice.toLocaleString()}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                                {item.windows.length} Jendela • Rp{item.unitPrice.toLocaleString()} / {item.unit === 'per m2' ? 'm²' : item.unit === 'per m' ? 'm' : item.unit}
+                                            </p>
                                         </div>
                                         <div className="text-right flex items-center gap-2 shrink-0">
                                             <p className="font-bold text-xs text-emerald-600 italic">Rp{item.itemTotalPrice.toLocaleString("id-ID")}</p>
@@ -467,7 +497,9 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                         >
                                             <option value="custom">-- Input Manual / Harga Custom --</option>
                                             {prices.map(p => (
-                                                <option key={p.id} value={p.id}>{p.name} (Rp {p.price.toLocaleString()})</option>
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name} (Rp {p.price.toLocaleString()} /{p.unit === 'per m2' ? 'm²' : p.unit === 'per m' ? 'm' : p.unit})
+                                                </option>
                                             ))}
                                         </select>
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -476,38 +508,42 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                     </div>
                                 </div>
 
-                                <div className="space-y-2.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Tipe / Kategori</label>
-                                    <div className="flex p-1.5 bg-slate-100 rounded-xl gap-1">
-                                        {(['roller', 'vertical', 'venetian'] as const).map(type => (
-                                            <button
-                                                key={type}
-                                                onClick={() => setBlindType(type)}
-                                                className={cn(
-                                                    "flex-1 py-2 px-1 rounded-lg text-[9px] xl:text-[10px] font-black uppercase transition-all duration-300 truncate",
-                                                    blindType === type
-                                                        ? "bg-emerald-600 text-white shadow-md scale-100"
-                                                        : "bg-transparent text-slate-400 hover:text-slate-600 hover:bg-white/50"
-                                                )}
-                                            >
-                                                {type}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                {selectedProductId === "custom" && (
+                                    <>
+                                        <div className="space-y-2.5">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Tipe / Kategori</label>
+                                            <div className="flex p-1.5 bg-slate-100 rounded-xl gap-1">
+                                                {(['roller', 'vertical', 'venetian'] as const).map(type => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => setBlindType(type)}
+                                                        className={cn(
+                                                            "flex-1 py-2 px-1 rounded-lg text-[9px] xl:text-[10px] font-black uppercase transition-all duration-300 truncate",
+                                                            blindType === type
+                                                                ? "bg-emerald-600 text-white shadow-md scale-100"
+                                                                : "bg-transparent text-slate-400 hover:text-slate-600 hover:bg-white/50"
+                                                        )}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2.5">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nama Produk (di Invoice)</label>
+                                            <Input
+                                                placeholder="Contoh: Roller Blind Blackout Seri SP.20"
+                                                className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold text-slate-700"
+                                                value={manualProductName}
+                                                onChange={(e) => setManualProductName(e.target.value)}
+                                            />
+                                        </div>
+                                    </>
+                                )}
 
                                 <div className="space-y-2.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nama Produk (di Invoice)</label>
-                                    <Input
-                                        placeholder="Contoh: Roller Blind Blackout Seri SP.20"
-                                        className="h-12 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl font-bold text-slate-700"
-                                        value={manualProductName}
-                                        onChange={(e) => setManualProductName(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="space-y-2.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Harga Jual / m² (Rp)</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Harga Jual / Satuan (Rp)</label>
                                     <div className="relative group/price">
                                         <Input
                                             type="number"
@@ -516,10 +552,25 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                                             value={manualPrice}
                                             onChange={(e) => setManualPrice(e.target.value)}
                                         />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100">/ M²</span>
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                            <span className={cn(
+                                                "text-[10px] font-black px-2 py-1 rounded-lg border",
+                                                selectedUnit === "per m2" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                    selectedUnit === "per m" ? "bg-amber-50 text-amber-600 border-amber-200 underline decoration-2" :
+                                                        "bg-blue-50 text-blue-600 border-blue-100"
+                                            )}>
+                                                {selectedUnit === "per m2" ? "/ M²" : selectedUnit === "per m" ? "/ M" : "/ PCS"}
+                                            </span>
+                                        </div>
                                     </div>
                                     <p className="text-[10px] text-slate-400 font-medium italic pl-1 flex items-center gap-1.5 mt-2">
-                                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Ketik angka untuk mengubah harga manual
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full animate-pulse",
+                                            selectedUnit === "per m" ? "bg-amber-400" : "bg-emerald-400"
+                                        )} />
+                                        {selectedUnit === "per m"
+                                            ? "Peringatan: Produk ini dihitung per Meter Lari (Tinggi diabaikan)"
+                                            : "Dihitung per Meter Persegi (Lebar x Tinggi)"}
                                     </p>
                                 </div>
                             </div>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Search, Edit2, Save, X, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 import { getProducts, addProduct, updateProduct, deleteProduct, Product } from "@/lib/products";
@@ -201,11 +202,28 @@ export default function ProductManagementPage() {
                                                     onChange={(e) => setEditPrice(Number(e.target.value))}
                                                     className="w-32 h-8 text-right font-bold"
                                                 />
-                                                <span className="text-slate-400 text-xs">/{product.unit}</span>
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded text-[10px] font-black uppercase",
+                                                    product.unit === "per m2" ? "bg-emerald-100 text-emerald-700" :
+                                                        product.unit === "per m" ? "bg-amber-100 text-amber-700" :
+                                                            "bg-blue-100 text-blue-700"
+                                                )}>
+                                                    /{product.unit}
+                                                </span>
                                             </div>
                                         ) : (
-                                            <div className="font-bold text-slate-900">
-                                                Rp {product.price.toLocaleString("id-ID")} <span className="text-slate-400 text-xs font-normal">/{product.unit}</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-bold text-slate-900 whitespace-nowrap">
+                                                    Rp {product.price.toLocaleString("id-ID")}
+                                                </span>
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded text-[10px] font-black uppercase",
+                                                    product.unit === "per m2" ? "bg-emerald-100 text-emerald-700" :
+                                                        product.unit === "per m" ? "bg-amber-100 text-amber-700 underline decoration-2 underline-offset-2" :
+                                                            "bg-blue-100 text-blue-700"
+                                                )}>
+                                                    {product.unit}
+                                                </span>
                                             </div>
                                         )}
                                     </td>
@@ -264,19 +282,28 @@ export default function ProductManagementPage() {
                                     <select
                                         className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                         value={newProduct.category}
-                                        onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                                        onChange={(e) => {
+                                            const cat = e.target.value;
+                                            const updates: any = { category: cat };
+                                            if (cat === "Kantor" || cat === "Gorden" || cat === "Hospital") {
+                                                updates.unit = "per m2";
+                                            }
+                                            setNewProduct({ ...newProduct, ...updates });
+                                        }}
                                     >
                                         <option value="Gorden">Gorden</option>
-                                        <option value="Kantor">Kantor</option>
+                                        <option value="Kantor">Kantor (Blind)</option>
                                         <option value="Sprei">Sprei</option>
                                         <option value="Bedcover">Bedcover</option>
                                         <option value="Hospital">Hospital</option>
+                                        <option value="Aksesoris">Aksesoris / Pipa</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Satuan</label>
                                     <select
-                                        className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        disabled={newProduct.category === "Kantor" || newProduct.category === "Gorden" || newProduct.category === "Hospital"}
+                                        className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-500"
                                         value={newProduct.unit}
                                         onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
                                     >
@@ -285,6 +312,9 @@ export default function ProductManagementPage() {
                                         <option value="pcs">pcs</option>
                                         <option value="per set">per set</option>
                                     </select>
+                                    {(newProduct.category === "Kantor" || newProduct.category === "Gorden" || newProduct.category === "Hospital") && (
+                                        <p className="text-[10px] text-emerald-600 font-bold italic mt-1">* Wajib m² untuk kategori ini</p>
+                                    )}
                                 </div>
                             </div>
 
