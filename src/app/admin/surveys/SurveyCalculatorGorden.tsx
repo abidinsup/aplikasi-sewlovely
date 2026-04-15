@@ -48,6 +48,7 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
 
     // Other Items State
     const [otherItems, setOtherItems] = React.useState<OtherItem[]>([]);
+    const [dealPrice, setDealPrice] = React.useState<number | "">("");
 
     // Initialize previews with survey photos if available
     const [kodeGordenPreview, setKodeGordenPreview] = React.useState<string | null>(survey.kode_gorden_url || null);
@@ -237,10 +238,13 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
         }
 
         // Create Invoice Data
+        const finalTotalPrice = dealPrice !== "" ? Number(dealPrice) : totalPrice;
+        
         const orderData = {
             customerInfo,
             savedItems: finalItems,
-            totalPrice,
+            totalPrice: finalTotalPrice,
+            originalTotalPrice: totalPrice,
             surveyDate,
             surveyTime,
             partner_id: survey.partner_id,
@@ -328,6 +332,24 @@ export default function SurveyCalculatorGorden({ survey, onBack }: SurveyCalcula
                             Rp {totalPrice.toLocaleString("id-ID")}
                         </h3>
                     </div>
+                </div>
+
+                {/* Deal Price Input */}
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl space-y-2">
+                    <label className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Harga Deal (Hasil Nego)</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-blue-400">Rp</span>
+                        <Input
+                            type="number"
+                            placeholder="Input harga deal jika ada nego..."
+                            className="bg-white border-blue-200 focus-visible:ring-blue-500 pl-10 font-bold text-blue-700"
+                            value={dealPrice}
+                            onChange={(e) => setDealPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                        />
+                    </div>
+                    <p className="text-[9px] text-blue-400 italic font-medium leading-tight">
+                        *Kosongkan jika menggunakan harga asli sistem. Harga ini yang akan muncul di invoice dan dasar komisi mitra.
+                    </p>
                 </div>
 
                 <div className="space-y-2 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 hidden lg:block">

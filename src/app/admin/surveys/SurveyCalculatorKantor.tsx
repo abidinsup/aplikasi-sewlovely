@@ -42,6 +42,7 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
     const [totalPrice, setTotalPrice] = React.useState(0);
     const [unitPrice, setUnitPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
+    const [dealPrice, setDealPrice] = React.useState<number | "">("");
 
     // Initialize previews with survey photos if available
     const [kodeGordenPreview, setKodeGordenPreview] = React.useState<string | null>(survey.kode_gorden_url || null);
@@ -200,10 +201,13 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
         }
 
         // Admin creates invoices directly
+        const finalTotalPrice = dealPrice !== "" ? Number(dealPrice) : finalItems.reduce((acc, item) => acc + item.itemTotalPrice, 0);
+        
         const orderData = {
             customerInfo,
             savedItems: finalItems,
-            totalPrice: finalItems.reduce((acc, item) => acc + item.itemTotalPrice, 0),
+            totalPrice: finalTotalPrice,
+            originalTotalPrice: finalItems.reduce((acc, item) => acc + item.itemTotalPrice, 0),
             surveyDate,
             surveyTime,
             partner_id: survey.partner_id,
@@ -261,6 +265,21 @@ export default function SurveyCalculatorKantor({ survey, onBack }: SurveyCalcula
                         <h3 className="text-3xl xl:text-4xl font-black text-slate-900 tracking-tight">
                             {totalPrice.toLocaleString("id-ID")}
                         </h3>
+                    </div>
+                </div>
+
+                {/* Deal Price Input */}
+                <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl space-y-2">
+                    <label className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block">Harga Deal (Hasil Nego)</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-indigo-400">Rp</span>
+                        <Input
+                            type="number"
+                            placeholder="Input harga deal..."
+                            className="bg-white border-indigo-200 focus-visible:ring-indigo-500 pl-10 font-bold text-indigo-700 h-12 rounded-xl"
+                            value={dealPrice}
+                            onChange={(e) => setDealPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                        />
                     </div>
                 </div>
 

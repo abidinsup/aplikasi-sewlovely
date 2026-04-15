@@ -32,6 +32,7 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
     const [unitPrice, setUnitPrice] = React.useState(0);
     const [prices, setPrices] = React.useState<Product[]>([]);
     const [savedItems, setSavedItems] = React.useState<any[]>([]);
+    const [dealPrice, setDealPrice] = React.useState<number | "">("");
 
     // Connecting Pipe State - Defaulting to always active
     const [selectedPipeId, setSelectedPipeId] = React.useState<number | null>(null);
@@ -191,10 +192,13 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
             return;
         }
 
+        const finalTotalPrice = dealPrice !== "" ? Number(dealPrice) : totalPrice;
+        
         const orderData = {
             customerInfo,
             savedItems: finalItems,
-            totalPrice,
+            totalPrice: finalTotalPrice,
+            originalTotalPrice: totalPrice,
             surveyDate,
             surveyTime,
             partner_id: survey.partner_id,
@@ -261,6 +265,21 @@ export default function SurveyCalculatorRS({ survey, onBack }: SurveyCalculatorP
                         <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight">
                             Rp {totalPrice.toLocaleString("id-ID")}
                         </h3>
+                    </div>
+                </div>
+
+                {/* Deal Price Input */}
+                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl space-y-2">
+                    <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Harga Deal (Hasil Nego)</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-400">Rp</span>
+                        <Input
+                            type="number"
+                            placeholder="Input harga deal..."
+                            className="bg-white border-emerald-200 focus-visible:ring-emerald-500 pl-10 font-bold text-emerald-700"
+                            value={dealPrice}
+                            onChange={(e) => setDealPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                        />
                     </div>
                 </div>
 

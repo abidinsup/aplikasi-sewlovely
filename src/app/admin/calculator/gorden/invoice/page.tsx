@@ -109,6 +109,7 @@ function InvoiceContent() {
                 customer_address: data.customerInfo?.address || null,
                 invoice_type: 'gorden',
                 total_amount: data.totalPrice,
+                original_amount: data.originalTotalPrice || null,
                 payment_status: 'pending',
                 survey_id: data.survey_id || null,
                 details: {
